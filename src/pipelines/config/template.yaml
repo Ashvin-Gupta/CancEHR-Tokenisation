@@ -1,0 +1,13 @@
+name: "Template Tokenization Pipeline"
+
+data:
+    path: "/home/joshua/data/mimic_meds/mimic_iv_meds/MEDS_cohort/data"
+
+tokenization:
+    tokenizer: "word_level"
+    vocab_size: 1000
+    insert_event_tokens: True
+    insert_numeric_tokens: True
+    insert_text_tokens: True
+
+save_path: "/home/joshua/data/mimic_meds/mimic_iv_meds/tokenized_data"
