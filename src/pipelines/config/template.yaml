@@ -1,11 +1,17 @@
-name: "Template Tokenization Pipeline"
+name: "template_tokenization_pipeline"
 
 data:
     path: "/home/joshua/data/mimic_meds/mimic_iv_meds/MEDS_cohort/data"
 
+preprocessing:
+    - type: "quantile_bin"
+      matching_type: "starts_with"
+      matching_value: "LAB"
+      k: 10 # number of bins
+
 tokenization:
     tokenizer: "word_level"
-    vocab_size: 1000
+    vocab_size: 4000
     insert_event_tokens: True
     insert_numeric_tokens: True
     insert_text_tokens: True

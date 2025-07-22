@@ -5,6 +5,7 @@ import polars as pl
 import gc
 import os
 from tqdm import tqdm
+from src.preprocessing.base import Preprocessor
 
 class WordLevelTokenizer(Tokenizer):
     def __init__(self, vocab_size: int = 10000, insert_event_tokens: bool = True, insert_numeric_tokens: bool = True, insert_text_tokens: bool = True):
@@ -29,7 +30,7 @@ class WordLevelTokenizer(Tokenizer):
             token: idx for idx, token in enumerate(self.special_tokens.keys())
         }
 
-    def train(self, event_files: List[str]) -> None:
+    def train(self, event_files: List[str], preprocessors: List[Preprocessor]) -> None:
         """
         Train the tokenizer using a list of parquet files containing MEDS events.
         The vocabulary will be limited to the most frequent tokens up to vocab_size,
@@ -37,7 +38,7 @@ class WordLevelTokenizer(Tokenizer):
 
         Args:
             event_files: List of paths to parquet files containing events
-
+            preprocessors: List of preprocessors to apply to the events
         Returns:
             None
         """
@@ -59,6 +60,11 @@ class WordLevelTokenizer(Tokenizer):
             try:
                 # Read one file at a time for memory efficiency
                 events = pl.read_parquet(file_path)
+
+                # Apply preprocessors to the events
+                if len(preprocessors) > 0:
+                    for preprocessor in preprocessors:
+                        events = preprocessor.encode_polars(events)
                 
                 # Process events for this file
                 processed_events = self._process_events(events)
@@ -116,47 +122,13 @@ class WordLevelTokenizer(Tokenizer):
         
         print(f"Training complete! Vocabulary size: {len(self.vocab)}")
 
-    def _events_to_str(self, events: List[dict]) -> str:
-
-        strs = []
-
-        for subject in events:
-
-            subject_str = ""
-
-            for event in subject["event_list"]:
-                if self.insert_event_tokens:
-                    subject_str += "<event> "
-                
-                subject_str += event["code"]
-                
-                if event["numeric_value"] is not None:
-                    if self.insert_numeric_tokens:
-                        subject_str += f" <numeric> {round(event['numeric_value'], 2)} </numeric>"
-                    else:
-                        subject_str += f" {round(event['numeric_value'], 2)}"
-                
-                if event["text_value"] is not None:
-                    if self.insert_text_tokens:
-                        subject_str += f" <text> {event['text_value']} </text>"
-                    else:
-                        subject_str += f" {event['text_value']}"
-                
-                if self.insert_event_tokens:
-                    subject_str += " </event> "
-                else:
-                    subject_str += " "
-
-            strs.append(subject_str)
-
-        return strs
-
-    def encode(self, event_filepath: str, allow_unknown: bool = False) -> List[dict]:
+    def encode(self, event_filepath: str, preprocessors: List[Preprocessor], allow_unknown: bool = False) -> List[dict]:
         """
         Encode a dataframe of events into their corresponding token IDs.
         
         Args:
             event_filepath: Path to parquet file containing events
+            preprocessors: List of preprocessors to apply to the events
             allow_unknown: Whether to use <unknown> token for out-of-vocabulary words
             
         Returns:
@@ -166,6 +138,11 @@ class WordLevelTokenizer(Tokenizer):
             raise ValueError("Tokenizer is not trained yet.")
         
         events = pl.read_parquet(event_filepath)
+        
+        # Apply preprocessors to the events
+        if len(preprocessors) > 0:
+            for preprocessor in preprocessors:
+                events = preprocessor.encode_polars(events)
         
         processed_events = self._process_events(events)
         subject_strs = self._events_to_str(processed_events)
@@ -261,16 +238,14 @@ class WordLevelTokenizer(Tokenizer):
         Decode a list of token IDs into their corresponding event strings.
 
         Args:
-            tokens: list of token IDs
+            tokens (List[int]): list of token IDs
 
         Returns:
-            string of event strings
+            str: string of event strings
 
         Raises:
             ValueError: if any token ID is not found in the vocabulary
         """
-        if not isinstance(tokens, list):
-            raise TypeError(f"Expected list of tokens, got {type(tokens)}")
             
         # Check all tokens first to provide a complete error message
         invalid_tokens = []
@@ -289,45 +264,34 @@ class WordLevelTokenizer(Tokenizer):
         for token in tokens:
             result = self.vocab.filter(pl.col("token") == token)["str"]
             decoded_tokens.extend(result.to_list())
-        return " ".join(decoded_tokens)
+        
+        str_tokens = " ".join(decoded_tokens)
+
+        return str_tokens
 
 
 if __name__ == "__main__":
     import polars as pl
-    import glob
+    from src.preprocessing.quantile_bin import QuantileBinPreprocessor
+    import os
     
-    # Example 1: Train on multiple files (if available)
-    train_files = glob.glob("/home/joshua/data/mimic_meds/mimic_iv_meds/MEDS_cohort/data/train/*.parquet")
-    if len(train_files) > 1:
-        # Use first few files for demo
-        train_files = train_files[:3]
-        print(f"Training on {len(train_files)} files")
-    else:
-        # Fallback to single file
-        train_files = ["/home/joshua/data/mimic_meds/mimic_iv_meds/MEDS_cohort/data/train/0.parquet"]
+    dir = "/home/joshua/data/mimic_meds/mimic_iv_meds/MEDS_cohort/data/train"
+    files = os.listdir(dir)
+    files = [os.path.join(dir, file) for file in files]
+
+    train_files = files[:3]
+    test_file = files[3]
     
-    # Load test data from the first file
-    test_corpus = pl.read_parquet(train_files[0])
-    test_corpus = test_corpus.filter(pl.col("subject_id") == test_corpus["subject_id"][44])
+    quantile_bin_preprocessor = QuantileBinPreprocessor(matching_type="starts_with", matching_value="LAB", k=10)
+
+    quantile_bin_preprocessor.fit(train_files)
+
+    tokenizer = WordLevelTokenizer(vocab_size=2000, insert_event_tokens=True, insert_numeric_tokens=True, insert_text_tokens=True)
+    tokenizer.train(train_files, [quantile_bin_preprocessor])
+
+    test_tokens = tokenizer.encode(test_file, [quantile_bin_preprocessor], allow_unknown=True)
+
+    print(test_tokens[0])
+
+    print(tokenizer.decode(test_tokens[0]["tokens"]))
     
-    tokenizer = WordLevelTokenizer(vocab_size=5000, insert_event_tokens=True, insert_numeric_tokens=True, insert_text_tokens=True)
-    tokenizer.train(train_files)
-    
-    # Get ground truth strings for first patient
-    processed_events = tokenizer._process_events(test_corpus)
-    ground_truth_strs = tokenizer._events_to_str(processed_events)
-    
-    print(f"Ground truth:\n{ground_truth_strs[0]}")
-    
-    # Test encoding
-    tokens = tokenizer.encode(test_corpus, allow_unknown=True)
-    if tokens:
-        tokens = tokens[0]['tokens']
-        print(f"Tokens:\n{tokens}")
-        print(f"Decoded:\n{tokenizer.decode(tokens)}")
-    
-    # kens = tokenizer.encode(test_corpus, allow_unknown=True)
-    # if tokens:
-    #     tokens = tokens[0]['tokens']
-    #     print(f"Tokens: {tokens}")
-    #     print(f"Decoded: {tokenizer.decode(tokens)}")

@@ -1,7 +1,9 @@
 from typing import List
 import polars as pl
+from src.preprocessing.base import Preprocessor
+from abc import ABC, abstractmethod
 
-class Tokenizer:
+class Tokenizer(ABC):
     def __init__(self, tokenizer_name: str):
         self.tokenizer_name = tokenizer_name
         self.unknown_token = "<unknown>"
@@ -34,12 +36,54 @@ class Tokenizer:
             )
 
         return processed_events
+    
+    def _events_to_str(self, events: List[dict]) -> str:
+        """
+        Convert a list of events to a string.
 
-    def train(self, events: pl.DataFrame) -> None:
-        pass
+        Args:
+            events (List[dict]): the events to convert to a string
 
-    def encode(self, events: pl.DataFrame, allow_unknown: bool = False) -> List[int]:
-        pass
+        Returns:
+            str: the string representation of the events
+        """
+        strs = []
+        for subject in events:
+            subject_str = ""
+            for event in subject["event_list"]:
+                if self.insert_event_tokens:
+                    subject_str += "<event> "
+                
+                subject_str += event["code"]
+                
+                if event["numeric_value"] is not None:
+                    if self.insert_numeric_tokens:
+                        subject_str += f" <numeric> {event['numeric_value']} </numeric>"
+                    else:
+                        subject_str += f" {event['numeric_value']}"
+                
+                if event["text_value"] is not None:
+                    if self.insert_text_tokens:
+                        subject_str += f" <text> {event['text_value']} </text>"
+                    else:
+                        subject_str += f" {event['text_value']}"
+                
+                if self.insert_event_tokens:
+                    subject_str += " </event> "
+                else:
+                    subject_str += " "
+
+            strs.append(subject_str)
+
+        return strs
+
+    @abstractmethod
+    def train(self, events: pl.DataFrame, preprocessors: List[Preprocessor]) -> None:
+        raise NotImplementedError("Subclasses must implement this method")
+
+    @abstractmethod
+    def encode(self, events: pl.DataFrame, preprocessors: List[Preprocessor], allow_unknown: bool = False) -> List[int]:
+        raise NotImplementedError("Subclasses must implement this method")
 
     def __str__(self) -> str:
         return f"Tokenizer: {self.tokenizer_name}\n" \

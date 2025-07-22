@@ -1,5 +1,6 @@
 import yaml
 from src.tokenization import WordLevelTokenizer, BPE
+from src.preprocessing import QuantileBinPreprocessor
 import os
 import polars as pl
 import pickle
@@ -10,32 +11,59 @@ from tqdm import tqdm
 
 DATASET_DIRS = ["train", "tuning", "held_out"]
 
-def run_pipeline(config: dict):
+def run_pipeline(config: dict, run_name: str):
+    """
+    Run a tokenization pipeline end to end.
+
+    Args:
+        config (dict): the config file
+        run_name (str): the name of the run
+    """
 
     # Validate all the expected fields are present in the config
     validate_config(config)
 
+    run_directory = os.path.join(config["save_path"], run_name)
+
     # Check is save directory already exists, and ask if the user wants to overwrite it
-    if os.path.exists(os.path.join(config["save_path"], config["name"])):
-        overwrite = input(f"Save directory {os.path.join(config['save_path'], config['name'])} already exists. Overwrite? (y/n): ")
+    if os.path.exists(run_directory):
+        overwrite = input(f"Save directory {os.path.join(config['save_path'], run_name)} already exists. Overwrite? (y/n): ")
         if overwrite != "y":
             print("Exiting...")
             return
         else:
             print("Overwriting...")
-            shutil.rmtree(os.path.join(config["save_path"], config["name"]))
+            shutil.rmtree(run_directory)
 
     # create save_path directory if it doesn't exist
-    if not os.path.exists(os.path.join(config["save_path"], config["name"])):
-        os.makedirs(os.path.join(config["save_path"], config["name"]))
+    if not os.path.exists(run_directory):
+        os.makedirs(run_directory)
 
     # Create subdirectories for each dataset
     for dataset in DATASET_DIRS:
-        os.makedirs(os.path.join(config["save_path"], config["name"], dataset), exist_ok=True)
+        os.makedirs(os.path.join(config["save_path"], run_name, dataset), exist_ok=True)
 
     # Check data is valid and load it
     data_files = gather_data_files(config["data"]["path"])
     print(f"Found {len(data_files['train'])} train files, {len(data_files['tuning'])} tuning files, and {len(data_files['held_out'])} held out files")
+
+    # Fit preprocessing
+    preprocessors = []
+    for preprocessing_config in config["preprocessing"]:
+
+        if preprocessing_config["type"] == "quantile_bin":
+            preprocessor = QuantileBinPreprocessor(
+                matching_type=preprocessing_config["matching_type"],
+                matching_value=preprocessing_config["matching_value"],
+                k=preprocessing_config["k"]
+            )
+        else:
+            raise ValueError(f"Preprocessor {preprocessing_config['type']} not supported")
+        
+        # Fit preprocessor to train data
+        preprocessor.fit(data_files["train"])
+
+        preprocessors.append(preprocessor)
 
     # Load tokenizer
     if config["tokenization"]["tokenizer"] == "word_level":
@@ -49,34 +77,40 @@ def run_pipeline(config: dict):
         raise ValueError(f"Tokenizer {config['tokenization']['tokenizer']} not supported")
     
     # Fit tokenizer to train data
-    tokenizer.train(data_files["train"])
+    tokenizer.train(data_files["train"], preprocessors)
 
     # encode train data
-    encode_files(tokenizer, data_files["train"], os.path.join(config["save_path"], config["name"], "train"))
+    encode_files(tokenizer, data_files["train"], os.path.join(run_directory, "train"), preprocessors)
 
     # encode tuning data
-    encode_files(tokenizer, data_files["tuning"], os.path.join(config["save_path"], config["name"], "tuning"))
+    encode_files(tokenizer, data_files["tuning"], os.path.join(run_directory, "tuning"), preprocessors)
 
     # encode held out data
-    encode_files(tokenizer, data_files["held_out"], os.path.join(config["save_path"], config["name"], "held_out"))
+    encode_files(tokenizer, data_files["held_out"], os.path.join(run_directory, "held_out"), preprocessors)
 
     # store a copy of the config file
-    with open(os.path.join(config["save_path"], config["name"], "config.yaml"), "w") as f:
+    with open(os.path.join(run_directory, "config.yaml"), "w") as f:
         yaml.dump(config, f)
 
     # store metadata
     metadata = {
         "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "run_name": run_name,
+        "config": config,
     }
-    with open(os.path.join(config["save_path"], config["name"], "metadata.json"), "w") as f:
+    with open(os.path.join(run_directory, "metadata.json"), "w") as f:
         json.dump(metadata, f)
 
     # store the vocab file as a csv
-    tokenizer.vocab.write_csv(os.path.join(config["save_path"], config["name"], "vocab.csv"))
+    tokenizer.vocab.write_csv(os.path.join(run_directory, "vocab.csv"))
 
 def validate_config(config: dict):
     """
-    Validate the config file.
+    Validate the config has all the expected fields.
+    Raises a ValueError if any expected fields are missing.
+
+    Args:
+        config (dict): the config file
     """
     
     # Check tokenizer is valid
@@ -103,18 +137,24 @@ def gather_data_files(data_path: str):
     Gather all data files from a data directory.
     Directory should be structured as:
     data_path/
-    ├── train/
-    │   ├── 0.parquet
-    │   ├── 1.parquet
-    │   └── ...
-    ├── tuning/
-    │   ├── 0.parquet
-    │   ├── 1.parquet
-    │   └── ...
-    └── held_out/
-        ├── 0.parquet
-        ├── 1.parquet
-        └── ...
+        ├── train/
+        │   ├── 0.parquet
+        │   ├── 1.parquet
+        │   └── ...
+        ├── tuning/
+        │   ├── 0.parquet
+        │   ├── 1.parquet
+        │   └── ...
+        └── held_out/
+            ├── 0.parquet
+            ├── 1.parquet
+            └── ...
+
+    Args:
+        data_path (str): the path to the data directory
+
+    Returns:
+        dict: a dictionary of dataset directories and their files
     """
     data_files = {x: [] for x in DATASET_DIRS}
     
@@ -127,7 +167,14 @@ def gather_data_files(data_path: str):
     return data_files
 
 def encode_files(tokenizer, event_files, save_path: str):
+    """
+    Encode a list of event files and save them as pickle files.
 
+    Args:
+        tokenizer (Tokenizer): the tokenizer to use
+        event_files (List[str]): the list of event files to encode
+        save_path (str): the path to save the encoded files
+    """
     for file in tqdm(event_files):
         encoded_data = tokenizer.encode(file, allow_unknown=True)
         with open(os.path.join(save_path, os.path.basename(file).replace(".parquet", ".pkl")), "wb") as f:
@@ -136,13 +183,13 @@ def encode_files(tokenizer, event_files, save_path: str):
 if __name__ == "__main__":
 
     import argparse
-
     parser = argparse.ArgumentParser()
     parser.add_argument("--config_filepath", type=str)
+    parser.add_argument("--run_name", type=str)
 
     args = parser.parse_args()
 
     with open(args.config_filepath, "r") as f:
         config = yaml.safe_load(f)
 
-    run_pipeline(config)
+    run_pipeline(config, args.run_name)
