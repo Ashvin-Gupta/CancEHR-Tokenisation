@@ -1,7 +1,8 @@
-from typing import List
+from typing import List, Dict, Any
 import polars as pl
 from src.preprocessing.base import Preprocessor
 from abc import ABC, abstractmethod
+import datetime
 
 class Tokenizer(ABC):
     def __init__(self, tokenizer_name: str):
@@ -9,7 +10,9 @@ class Tokenizer(ABC):
         self.unknown_token = "<unknown>"
         self.vocab = pl.DataFrame(schema={"token": pl.Int64, "str": pl.String, "count": pl.Int64})
         self.special_tokens = {
-            self.unknown_token: 0
+            self.unknown_token: 0,
+            "<start>": 1,
+            "<end>": 2,
         }
 
     def _process_events(self, events: pl.DataFrame) -> List[str]:
@@ -37,7 +40,7 @@ class Tokenizer(ABC):
 
         return processed_events
     
-    def _events_to_str(self, events: List[dict]) -> str:
+    def _events_to_lists(self, events: List[dict]) -> Dict[str, List[str]]:
         """
         Convert a list of events to a string.
 
@@ -47,35 +50,78 @@ class Tokenizer(ABC):
         Returns:
             str: the string representation of the events
         """
-        strs = []
+        result = {
+            "strings": [],
+            "timestamps": []
+        }
+
+        def format_timestamp(timestamp: Any) -> float:
+            """Format a timestamp to a float"""
+            if timestamp is None:
+                return 0
+            elif isinstance(timestamp, datetime.datetime):
+                return timestamp.timestamp()
+            else:
+                return timestamp
+
+        # Loop through each subject in the events list
         for subject in events:
-            subject_str = ""
+
+            strings = ["<start>"]
+            timestamps = [0]
+
             for event in subject["event_list"]:
+
+                # Add event start token if specified
                 if self.insert_event_tokens:
-                    subject_str += "<event> "
+                    strings.append("<event>")
+                    timestamps.append(format_timestamp(event["timestamp"]))
                 
-                subject_str += event["code"]
+                # Add the code
+                strings.append(event["code"])
+                timestamps.append(format_timestamp(event["timestamp"]))
                 
+                # Add the numeric value if specified
                 if event["numeric_value"] is not None:
                     if self.insert_numeric_tokens:
-                        subject_str += f" <numeric> {event['numeric_value']} </numeric>"
+                        strings.append("<numeric>")
+                        timestamps.append(format_timestamp(event["timestamp"]))
+
+                        strings.append(str(event["numeric_value"]))
+                        timestamps.append(format_timestamp(event["timestamp"]))
+
+                        strings.append("</numeric>")
+                        timestamps.append(format_timestamp(event["timestamp"]))
                     else:
-                        subject_str += f" {event['numeric_value']}"
+                        strings.append(str(event["numeric_value"]))
+                        timestamps.append(format_timestamp(event["timestamp"]))
                 
+                # Add the text value if specified
                 if event["text_value"] is not None:
                     if self.insert_text_tokens:
-                        subject_str += f" <text> {event['text_value']} </text>"
+                        strings.append("<text>")
+                        timestamps.append(format_timestamp(event["timestamp"]))
+
+                        strings.append(str(event["text_value"]))
+                        timestamps.append(format_timestamp(event["timestamp"]))
+
+                        strings.append("</text>")
+                        timestamps.append(format_timestamp(event["timestamp"]))
                     else:
-                        subject_str += f" {event['text_value']}"
+                        strings.append(str(event["text_value"]))
+                        timestamps.append(format_timestamp(event["timestamp"]))
                 
                 if self.insert_event_tokens:
-                    subject_str += " </event> "
-                else:
-                    subject_str += " "
+                    strings.append("</event>")
+                    timestamps.append(format_timestamp(event["timestamp"]))
 
-            strs.append(subject_str)
+            strings.append("<end>")
+            timestamps.append(format_timestamp(event["timestamp"]))
 
-        return strs
+            result["strings"].append(strings)
+            result["timestamps"].append(timestamps)
+
+        return result
 
     @abstractmethod
     def train(self, events: pl.DataFrame, preprocessors: List[Preprocessor]) -> None:

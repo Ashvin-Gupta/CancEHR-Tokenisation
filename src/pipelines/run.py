@@ -1,6 +1,5 @@
 import yaml
 from src.tokenization import WordLevelTokenizer, BPE
-from src.preprocessing import QuantileBinPreprocessor
 import os
 import polars as pl
 import pickle
@@ -8,6 +7,12 @@ import json
 from datetime import datetime
 import shutil
 from tqdm import tqdm
+from typing import List
+from src.preprocessing.base import Preprocessor
+from src.postprocessing.base import Postprocessor
+from src.preprocessing import QuantileBinPreprocessor
+from src.postprocessing import TimeIntervalPostprocessor
+from src.preprocessing.utils import fit_preprocessors_jointly
 
 DATASET_DIRS = ["train", "tuning", "held_out"]
 
@@ -47,23 +52,35 @@ def run_pipeline(config: dict, run_name: str):
     data_files = gather_data_files(config["data"]["path"])
     print(f"Found {len(data_files['train'])} train files, {len(data_files['tuning'])} tuning files, and {len(data_files['held_out'])} held out files")
 
-    # Fit preprocessing
+    # Create preprocessors
     preprocessors = []
-    for preprocessing_config in config["preprocessing"]:
+    if "preprocessing" in config:
+        for preprocessing_config in config["preprocessing"]:
+            if preprocessing_config["type"] == "quantile_bin":
+                preprocessor = QuantileBinPreprocessor(
+                    matching_type=preprocessing_config["matching_type"],
+                    matching_value=preprocessing_config["matching_value"],
+                    k=preprocessing_config["k"]
+                )
+            else:
+                raise ValueError(f"Preprocessor {preprocessing_config['type']} not supported")
+            
+            preprocessors.append(preprocessor)
 
-        if preprocessing_config["type"] == "quantile_bin":
-            preprocessor = QuantileBinPreprocessor(
-                matching_type=preprocessing_config["matching_type"],
-                matching_value=preprocessing_config["matching_value"],
-                k=preprocessing_config["k"]
-            )
-        else:
-            raise ValueError(f"Preprocessor {preprocessing_config['type']} not supported")
-        
-        # Fit preprocessor to train data
-        preprocessor.fit(data_files["train"])
+    # Fit all preprocessors jointly
+    if preprocessors:
+        fit_preprocessors_jointly(preprocessors, data_files["train"])
 
-        preprocessors.append(preprocessor)
+    # Load postprocessors
+    postprocessors = []
+    if "postprocessing" in config:
+        for postprocessing_config in config["postprocessing"]:
+            if postprocessing_config["type"] == "time_interval":
+                postprocessor = TimeIntervalPostprocessor(postprocessing_config["interval_tokens"])
+            else:
+                raise ValueError(f"Postprocessor {postprocessing_config['type']} not supported")
+            
+            postprocessors.append(postprocessor)
 
     # Load tokenizer
     if config["tokenization"]["tokenizer"] == "word_level":
@@ -75,18 +92,18 @@ def run_pipeline(config: dict, run_name: str):
         )
     else:
         raise ValueError(f"Tokenizer {config['tokenization']['tokenizer']} not supported")
-    
+
     # Fit tokenizer to train data
-    tokenizer.train(data_files["train"], preprocessors)
+    tokenizer.train(data_files["train"], preprocessors, postprocessors)
 
     # encode train data
-    encode_files(tokenizer, data_files["train"], os.path.join(run_directory, "train"), preprocessors)
+    encode_files(tokenizer, data_files["train"], os.path.join(run_directory, "train"), preprocessors, postprocessors)
 
     # encode tuning data
-    encode_files(tokenizer, data_files["tuning"], os.path.join(run_directory, "tuning"), preprocessors)
+    encode_files(tokenizer, data_files["tuning"], os.path.join(run_directory, "tuning"), preprocessors, postprocessors)
 
     # encode held out data
-    encode_files(tokenizer, data_files["held_out"], os.path.join(run_directory, "held_out"), preprocessors)
+    encode_files(tokenizer, data_files["held_out"], os.path.join(run_directory, "held_out"), preprocessors, postprocessors)
 
     # store a copy of the config file
     with open(os.path.join(run_directory, "config.yaml"), "w") as f:
@@ -166,7 +183,7 @@ def gather_data_files(data_path: str):
 
     return data_files
 
-def encode_files(tokenizer, event_files, save_path: str):
+def encode_files(tokenizer, event_files: List[str], save_path: str, preprocessors: List[Preprocessor] = None, postprocessors: List[Postprocessor] = None):
     """
     Encode a list of event files and save them as pickle files.
 
@@ -174,9 +191,10 @@ def encode_files(tokenizer, event_files, save_path: str):
         tokenizer (Tokenizer): the tokenizer to use
         event_files (List[str]): the list of event files to encode
         save_path (str): the path to save the encoded files
+        preprocessors (List[Preprocessor]): the list of preprocessors to use
     """
     for file in tqdm(event_files):
-        encoded_data = tokenizer.encode(file, allow_unknown=True)
+        encoded_data = tokenizer.encode(file, preprocessors, postprocessors, allow_unknown=True)
         with open(os.path.join(save_path, os.path.basename(file).replace(".parquet", ".pkl")), "wb") as f:
             pickle.dump(encoded_data, f)
 
