@@ -9,13 +9,18 @@ from src.preprocessing.base import Preprocessor
 from src.postprocessing.base import Postprocessor
 
 class WordLevelTokenizer(Tokenizer):
-    def __init__(self, vocab_size: int = 1000, insert_event_tokens: bool = True, insert_numeric_tokens: bool = True, insert_text_tokens: bool = True):
-        super().__init__("word_level")
-        self.vocab_size = vocab_size
-        self.insert_event_tokens = insert_event_tokens
-        self.insert_numeric_tokens = insert_numeric_tokens
-        self.insert_text_tokens = insert_text_tokens
-        self.vocab = pl.DataFrame(schema={"token": pl.Int64, "str": pl.String, "count": pl.Int64})
+    """
+    A tokenizer that uses a word-level approach to tokenize events.
+    E.g. The sequence "A dog in the park" would be tokenized as ["A", "dog", "in", "the", "park"].
+
+    Args:
+        vocab_size (int): the size of the vocabulary.
+        insert_event_tokens (bool): whether to insert event tokens.
+        insert_numeric_tokens (bool): whether to insert numeric tokens.
+        insert_text_tokens (bool): whether to insert text tokens.
+    """
+    def __init__(self, vocab_size: int = 1000, insert_event_tokens: bool = True, insert_numeric_tokens: bool = True, insert_text_tokens: bool = True) -> None:
+        super().__init__("word_level", vocab_size, insert_event_tokens, insert_numeric_tokens, insert_text_tokens)
 
         # Add special tokens to the vocabulary
         special_token_rows = [
@@ -40,6 +45,8 @@ class WordLevelTokenizer(Tokenizer):
         Args:
             event_files: List of paths to parquet files containing events
             preprocessors: List of preprocessors to apply to the events
+            postprocessors: List of postprocessors to apply to the events
+
         Returns:
             None
         """
@@ -126,7 +133,7 @@ class WordLevelTokenizer(Tokenizer):
         
         print(f"Training complete! Vocabulary size: {len(self.vocab)}")
 
-    def encode(self, event_filepath: str, preprocessors: List[Preprocessor], postprocessors: List[Postprocessor], allow_unknown: bool = False) -> List[dict]:
+    def encode(self, event_filepath: str, preprocessors: List[Preprocessor], postprocessors: List[Postprocessor]) -> List[dict]:
         """
         Encode a dataframe of events into their corresponding token IDs.
         
@@ -228,7 +235,7 @@ if __name__ == "__main__":
     tokenizer = WordLevelTokenizer(vocab_size=2000, insert_event_tokens=True, insert_numeric_tokens=True, insert_text_tokens=True)
     tokenizer.train(train_files, [quantile_bin_preprocessor])
 
-    test_tokens = tokenizer.encode(test_file, [quantile_bin_preprocessor], allow_unknown=True)
+    test_tokens = tokenizer.encode(test_file, [quantile_bin_preprocessor], [])
 
     print(test_tokens[0])
 

@@ -1,5 +1,5 @@
 import yaml
-from src.tokenization import WordLevelTokenizer, BPE
+from src.tokenization import WordLevelTokenizer
 import os
 import polars as pl
 import pickle
