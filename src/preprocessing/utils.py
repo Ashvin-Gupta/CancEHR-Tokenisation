@@ -4,14 +4,17 @@ from tqdm import tqdm
 import polars as pl
 from .base import Preprocessor
 
-
-def fit_preprocessors_jointly(preprocessors: List[Preprocessor], event_files: List[str]):
+def fit_preprocessors_jointly(preprocessors: List[Preprocessor], event_files: List[str]) -> None:
     """
     Fit multiple preprocessors jointly by reading through the data files only once.
+    Fits the preprocessors in place and does not return anything.
     
     Args:
         preprocessors (List[Preprocessor]): list of preprocessors to fit
-        event_files (List[str]): list of event files to train on
+        event_files (List[str]): list of parquet file paths to train on
+
+    Returns:
+        None
     """
     # Validate all files exist before processing
     for file_path in event_files:

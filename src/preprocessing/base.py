@@ -100,7 +100,6 @@ class Preprocessor(ABC):
         )
         return events
             
-
     @abstractmethod
     def _fit(self, values: np.ndarray) -> Any:
         """

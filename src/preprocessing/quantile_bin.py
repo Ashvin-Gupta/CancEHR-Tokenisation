@@ -3,18 +3,28 @@ from typing import List
 from .base import Preprocessor
 
 class QuantileBinPreprocessor(Preprocessor):
+    """
+    A preprocessor that bins values into k equal frequency bins.
+
+    Args:
+        matching_type (str): the type of matching to use. Must be one of "starts_with", "ends_with", "contains", "equals", "regex"
+        matching_value (str): the value to match.
+        k (int): the number of bins to create.
+    """
     def __init__(self, matching_type: str, matching_value: str, k: int):
         # Initialize base class
         super().__init__(matching_type, matching_value)
         
+        assert k > 1, "k must be greater than 1"
+
         # Store quantile-specific parameters
         self.k = k
         self.edges = None
 
-    def _fit(self) -> np.ndarray:
+    def _fit(self) -> None:
         """
         Compute self.k equal frequency (quantile) bin edges.
-        Returns a NumPy array of length self.k+1.
+        Store the bin edges in self.edges.
         """
 
         if self.data is None:
@@ -33,6 +43,9 @@ class QuantileBinPreprocessor(Preprocessor):
         Args:
             code (str): the code to encode
             value (float): the value to encode
+
+        Returns:
+            str: the bin label
         """
         if self.fits is None:
             raise ValueError("Preprocessor must be fitted before encoding. Call fit() first.")
@@ -55,7 +68,7 @@ class QuantileBinPreprocessor(Preprocessor):
             raise ValueError(f"_encode() called with code {code} that does not match the matching criteria.")
     
 if __name__ == "__main__":
-
+    # Test the preprocessor
     train_values = np.random.randint(0, 100, 10)
 
     QBP = QuantileBinPreprocessor(matching_type="starts_with", matching_value="LAB", k=10)
