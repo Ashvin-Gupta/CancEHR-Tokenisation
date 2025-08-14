@@ -228,7 +228,7 @@ if __name__ == "__main__":
     train_files = files[:3]
     test_file = files[3]
     
-    quantile_bin_preprocessor = QuantileBinPreprocessor(matching_type="starts_with", matching_value="LAB", k=10)
+    quantile_bin_preprocessor = QuantileBinPreprocessor(matching_type="starts_with", matching_value="LAB", k=10, value_column="numeric_value")
 
     quantile_bin_preprocessor.fit(train_files)
 

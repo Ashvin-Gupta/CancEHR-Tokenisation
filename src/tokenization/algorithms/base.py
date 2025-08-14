@@ -27,6 +27,12 @@ class Tokenizer(ABC):
         self.start_token = "<start>"
         self.end_token = "<end>"
 
+        # store parameters
+        self.vocab_size = vocab_size
+        self.insert_event_tokens = insert_event_tokens
+        self.insert_numeric_tokens = insert_numeric_tokens
+        self.insert_text_tokens = insert_text_tokens
+
         if insert_event_tokens:
             self.event_start_token = "<event>"
             self.event_end_token = "</event>"
