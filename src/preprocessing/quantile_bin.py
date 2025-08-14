@@ -10,10 +10,11 @@ class QuantileBinPreprocessor(Preprocessor):
         matching_type (str): the type of matching to use. Must be one of "starts_with", "ends_with", "contains", "equals", "regex"
         matching_value (str): the value to match.
         k (int): the number of bins to create.
+        value_column (str): the column containing the numeric values to bin.
     """
-    def __init__(self, matching_type: str, matching_value: str, k: int):
+    def __init__(self, matching_type: str, matching_value: str, k: int, value_column: str):
         # Initialize base class
-        super().__init__(matching_type, matching_value)
+        super().__init__(matching_type, matching_value, value_column)
         
         assert k > 1, "k must be greater than 1"
 
@@ -71,7 +72,7 @@ if __name__ == "__main__":
     # Test the preprocessor
     train_values = np.random.randint(0, 100, 10)
 
-    QBP = QuantileBinPreprocessor(matching_type="starts_with", matching_value="LAB", k=10)
+    QBP = QuantileBinPreprocessor(matching_type="starts_with", matching_value="LAB", k=10, value_column="numeric_value")
     QBP.fit(train_values)
     print(QBP.edges)
 

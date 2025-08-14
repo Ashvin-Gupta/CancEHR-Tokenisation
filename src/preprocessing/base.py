@@ -12,10 +12,12 @@ class Preprocessor(ABC):
     Args:
         matching_type (str): the type of matching to perform
         matching_value (str): the value to match against
+        value_column (str): the column containing the numeric values to bin.
     """
-    def __init__(self, matching_type: str, matching_value: str):
+    def __init__(self, matching_type: str, matching_value: str, value_column: str):
         self.matching_type = matching_type
         self.matching_value = matching_value
+        self.value_column = value_column
         
         # validate matching type
         if matching_type not in ["starts_with", "ends_with", "contains", "equals"]:
@@ -65,38 +67,46 @@ class Preprocessor(ABC):
             events = pl.read_parquet(event_file)
             
             for event in events.to_dicts():
+
+                value = event[self.value_column]
                 # Check if the event has a numeric value and matches the matching criteria
-                if event["numeric_value"] is not None and self._match(event["code"]):
+                if value is not None and self._match(event["code"]):
+
+                    # map value to float (in case it is a string)
+                    value = float(value)
+
+                    print(event["code"], value, type(value))
 
                     # Add the datapoint to the data dictionary
                     if event["code"] not in self.data:
                         self.data[event["code"]] = []
-                    self.data[event["code"]].append(event["numeric_value"])
+                    self.data[event["code"]].append(value)
         
         # Call the child class's _fit() method to fit the preprocessor to the data
         self._fit()
 
     def encode_polars(self, events: pl.DataFrame) -> pl.DataFrame:
         """
-        Encode the data in the event files and overwrite numeric_value column.
+        Encode the data in the event files and overwrite self.value_column column.
 
         Args:
             events (pl.DataFrame): the events to encode
 
         Returns:
-            pl.DataFrame: the events with the encoded numeric_value column
+            pl.DataFrame: the events with the encoded self.value_column column
         """
         def encode_row(row):
             code = row["code"]
-            numeric_value = row["numeric_value"]
+            value = row[self.value_column]
             
-            if self._match(code) and numeric_value is not None:
-                encoded = self._encode(code, numeric_value)
-                return str(encoded) if encoded is not None else str(numeric_value)
-            return str(numeric_value) if numeric_value is not None else None
+            if self._match(code) and value is not None:
+                value = float(value)
+                encoded = self._encode(code, value)
+                return str(encoded) if encoded is not None else str(value)
+            return str(value) if value is not None else None
 
         events = events.with_columns(
-            pl.struct(["code", "numeric_value"]).map_elements(encode_row, return_dtype=pl.String).alias("numeric_value")
+            pl.struct(["code", self.value_column]).map_elements(encode_row, return_dtype=pl.String).alias(self.value_column)
         )
         return events
             

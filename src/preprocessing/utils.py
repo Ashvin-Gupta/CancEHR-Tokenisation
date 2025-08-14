@@ -28,11 +28,14 @@ def fit_preprocessors_jointly(preprocessors: List[Preprocessor], event_files: Li
         for event in events.to_dicts():
             # Check each preprocessor to see if this event matches its criteria
             for preprocessor in preprocessors:
-                if event["numeric_value"] is not None and preprocessor._match(event["code"]):
+                value = event[preprocessor.value_column]
+                if value is not None and preprocessor._match(event["code"]):
+                    # map value to float (in case it is a string)
+                    value = float(value)
                     # Add the datapoint to this preprocessor's data dictionary
                     if event["code"] not in preprocessor.data:
                         preprocessor.data[event["code"]] = []
-                    preprocessor.data[event["code"]].append(event["numeric_value"])
+                    preprocessor.data[event["code"]].append(value)
     
     # Now fit each preprocessor to its collected data
     for preprocessor in tqdm(preprocessors, desc="Fitting preprocessors", leave=False):

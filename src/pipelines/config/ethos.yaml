@@ -1,24 +1,35 @@
 name: "ethos_tokenization_pipeline"
 
 data:
-    path: "/home/joshua/data/mimic_meds/mimic_iv_meds/MEDS_cohort/data"
+    path: "/home/joshua/data/mimic/mimic_iv/meds/mimic_iv_meds/MEDS_cohort/data"
+
+save_path: "/home/joshua/data/mimic/mimic_iv/meds/mimic_iv_meds/tokenized_data"
 
 preprocessing:
     - type: "quantile_bin"
       matching_type: "starts_with"
       matching_value: "LAB"
+      value_column: "numeric_value"
       k: 10
     - type: "quantile_bin"
       matching_type: "starts_with"
-      matching_value: "BMI//Q"
+      matching_value: "BMI"
+      value_column: "text_value"
       k: 10
     - type: "quantile_bin"
       matching_type: "starts_with"
-      matching_value: "VITAL//Q"
+      matching_value: "Height"
+      value_column: "text_value"
+      k: 10
+    - type: "quantile_bin"
+      matching_type: "starts_with"
+      matching_value: "Weight"
+      value_column: "text_value"
       k: 10
     - type: "quantile_bin"
       matching_type: "starts_with"
       matching_value: "SUBJECT_FLUID_OUTPUT//Q//"
+      value_column: "numeric_value"
       k: 10
 
 postprocessing:
@@ -83,9 +94,7 @@ postprocessing:
           
 tokenization:
     tokenizer: "word_level"
-    vocab_size: 4000
+    vocab_size: 5500
     insert_event_tokens: False
     insert_numeric_tokens: False
     insert_text_tokens: False
-
-save_path: "/home/joshua/data/mimic_meds/mimic_iv_meds/tokenized_data"

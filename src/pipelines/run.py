@@ -51,7 +51,6 @@ def run_pipeline(config: dict, run_name: str):
     # Check data is valid and load it
     data_files = gather_data_files(config["data"]["path"])
     print(f"Found {len(data_files['train'])} train files, {len(data_files['tuning'])} tuning files, and {len(data_files['held_out'])} held out files")
-
     # Create preprocessors
     preprocessors = []
     if "preprocessing" in config:
@@ -60,7 +59,8 @@ def run_pipeline(config: dict, run_name: str):
                 preprocessor = QuantileBinPreprocessor(
                     matching_type=preprocessing_config["matching_type"],
                     matching_value=preprocessing_config["matching_value"],
-                    k=preprocessing_config["k"]
+                    k=preprocessing_config["k"],
+                    value_column=preprocessing_config["value_column"]
                 )
             else:
                 raise ValueError(f"Preprocessor {preprocessing_config['type']} not supported")
@@ -194,7 +194,7 @@ def encode_files(tokenizer, event_files: List[str], save_path: str, preprocessor
         preprocessors (List[Preprocessor]): the list of preprocessors to use
     """
     for file in tqdm(event_files):
-        encoded_data = tokenizer.encode(file, preprocessors, postprocessors, allow_unknown=True)
+        encoded_data = tokenizer.encode(file, preprocessors, postprocessors)
         with open(os.path.join(save_path, os.path.basename(file).replace(".parquet", ".pkl")), "wb") as f:
             pickle.dump(encoded_data, f)
 
