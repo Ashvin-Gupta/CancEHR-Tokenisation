@@ -8,9 +8,9 @@ from datetime import datetime
 import shutil
 from tqdm import tqdm
 from typing import List
-from src.preprocessing.base import Preprocessor
+from src.preprocessing.base import BasePreprocessor
 from src.postprocessing.base import Postprocessor
-from src.preprocessing import QuantileBinPreprocessor
+from src.preprocessing import QuantileBinPreprocessor, CodeEnrichmentPreprocessor
 from src.postprocessing import TimeIntervalPostprocessor
 from src.preprocessing.utils import fit_preprocessors_jointly
 
@@ -51,6 +51,11 @@ def run_pipeline(config: dict, run_name: str):
     # Check data is valid and load it
     data_files = gather_data_files(config["data"]["path"])
     print(f"Found {len(data_files['train'])} train files, {len(data_files['tuning'])} tuning files, and {len(data_files['held_out'])} held out files")
+
+    # data_files['train'] = data_files['train'][:20]
+    # data_files['tuning'] = data_files['tuning'][:20]
+    # data_files['held_out'] = data_files['held_out'][:20]
+
     # Create preprocessors
     preprocessors = []
     if "preprocessing" in config:
@@ -61,6 +66,16 @@ def run_pipeline(config: dict, run_name: str):
                     matching_value=preprocessing_config["matching_value"],
                     k=preprocessing_config["k"],
                     value_column=preprocessing_config["value_column"]
+                )
+            elif preprocessing_config["type"] == "code_enrichment":
+                preprocessor = CodeEnrichmentPreprocessor(
+                    matching_type=preprocessing_config["matching_type"],
+                    matching_value=preprocessing_config["matching_value"],
+                    lookup_file=preprocessing_config["lookup_file"],
+                    template=preprocessing_config["template"],
+                    code_column=preprocessing_config["code_column"],
+                    dtypes=preprocessing_config.get("dtypes", None),
+                    additional_filters=preprocessing_config.get("additional_filters", None)
                 )
             else:
                 raise ValueError(f"Preprocessor {preprocessing_config['type']} not supported")
@@ -183,7 +198,7 @@ def gather_data_files(data_path: str):
 
     return data_files
 
-def encode_files(tokenizer, event_files: List[str], save_path: str, preprocessors: List[Preprocessor] = None, postprocessors: List[Postprocessor] = None):
+def encode_files(tokenizer, event_files: List[str], save_path: str, preprocessors: List[BasePreprocessor] = None, postprocessors: List[Postprocessor] = None):
     """
     Encode a list of event files and save them as pickle files.
 

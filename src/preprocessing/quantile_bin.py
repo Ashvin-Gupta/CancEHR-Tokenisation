@@ -1,8 +1,8 @@
 import numpy as np
 from typing import List
-from .base import Preprocessor
+from .base import ValuePreprocessor
 
-class QuantileBinPreprocessor(Preprocessor):
+class QuantileBinPreprocessor(ValuePreprocessor):
     """
     A preprocessor that bins values into k equal frequency bins.
 
