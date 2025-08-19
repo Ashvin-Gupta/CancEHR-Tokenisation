@@ -5,7 +5,7 @@ import polars as pl
 import gc
 import os
 from tqdm import tqdm
-from src.preprocessing.base import Preprocessor
+from src.preprocessing.base import BasePreprocessor
 from src.postprocessing.base import Postprocessor
 
 class WordLevelTokenizer(Tokenizer):
@@ -36,7 +36,7 @@ class WordLevelTokenizer(Tokenizer):
             token: idx for idx, token in enumerate(self.special_tokens.keys())
         }
 
-    def train(self, event_files: List[str], preprocessors: List[Preprocessor], postprocessors: List[Postprocessor]) -> None:
+    def train(self, event_files: List[str], preprocessors: List[BasePreprocessor], postprocessors: List[Postprocessor]) -> None:
         """
         Train the tokenizer using a list of parquet files containing MEDS events.
         The vocabulary will be limited to the most frequent tokens up to vocab_size,
@@ -133,7 +133,7 @@ class WordLevelTokenizer(Tokenizer):
         
         print(f"Training complete! Vocabulary size: {len(self.vocab)}")
 
-    def encode(self, event_filepath: str, preprocessors: List[Preprocessor], postprocessors: List[Postprocessor]) -> List[dict]:
+    def encode(self, event_filepath: str, preprocessors: List[BasePreprocessor], postprocessors: List[Postprocessor]) -> List[dict]:
         """
         Encode a dataframe of events into their corresponding token IDs.
         

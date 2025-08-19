@@ -1,0 +1,105 @@
+name: "ethos_tokenization_pipeline"
+
+data:
+    path: "/home/joshua/data/mimic/mimic_iv/meds/mimic_iv_meds/MEDS_cohort/data"
+
+save_path: "/home/joshua/data/mimic/mimic_iv/meds/mimic_iv_meds/tokenized_data"
+
+preprocessing:
+    # Quantile binning for LAB values
+    - type: "quantile_bin"
+      matching_type: "starts_with"
+      matching_value: "LAB"
+      value_column: "numeric_value"
+      k: 10
+    # Quantile binning for BMI values
+    - type: "quantile_bin"
+      matching_type: "starts_with"
+      matching_value: "BMI"
+      value_column: "text_value"
+      k: 10
+    # Quantile binning for Height values
+    - type: "quantile_bin"
+      matching_type: "starts_with"
+      matching_value: "Height"
+      value_column: "text_value"
+      k: 10
+    # Quantile binning for Weight values
+    - type: "quantile_bin"
+      matching_type: "starts_with"
+      matching_value: "Weight"
+      value_column: "text_value"
+      k: 10
+    # Quantile binning for SUBJECT_FLUID_OUTPUT values
+    - type: "quantile_bin"
+      matching_type: "starts_with"
+      matching_value: "SUBJECT_FLUID_OUTPUT//Q//"
+      value_column: "numeric_value"
+      k: 10
+
+postprocessing:
+    - type: "time_interval"
+      interval_tokens:
+        "5m-15m":
+          min: 5
+          max: 15
+        "15m-45m":
+          min: 15
+          max: 45
+        "45m-1h15m":
+          min: 45
+          max: 75
+        "1h15m-2h":
+          min: 75
+          max: 120
+        "2h-3h":
+          min: 120
+          max: 180
+        "3h-5h":
+          min: 180
+          max: 300
+        "5h-8h":
+          min: 300
+          max: 480
+        "8h-12h":
+          min: 480
+          max: 720
+        "12h-18h":
+          min: 720
+          max: 1080
+        "18h-1d":
+          min: 1080
+          max: 1440
+        "1d-2d":
+          min: 1440
+          max: 2880
+        "2d-4d":
+          min: 2880
+          max: 5760
+        "4d-7d":
+          min: 5760
+          max: 10080
+        "7d-12d":
+          min: 10080
+          max: 17280
+        "12d-20d":
+          min: 17280
+          max: 28800
+        "20d-30d":
+          min: 28800
+          max: 43200
+        "30d-2mt":
+          min: 43200
+          max: 86400
+        "2mt-6mt":
+          min: 86400
+          max: 259200
+        "6mt-":
+          min: 259200
+          
+tokenization:
+    tokenizer: "word_level"
+    vocab_size: 5500
+    insert_event_tokens: False
+    insert_numeric_tokens: False
+    insert_text_tokens: False

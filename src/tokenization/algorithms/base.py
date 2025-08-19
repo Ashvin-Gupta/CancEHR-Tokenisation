@@ -1,6 +1,6 @@
 from typing import List, Dict, Any
 import polars as pl
-from src.preprocessing.base import Preprocessor
+from src.preprocessing.base import BasePreprocessor
 from abc import ABC, abstractmethod
 import datetime
 
@@ -167,11 +167,11 @@ class Tokenizer(ABC):
         return result
 
     @abstractmethod
-    def train(self, events: pl.DataFrame, preprocessors: List[Preprocessor]) -> None:
+    def train(self, events: pl.DataFrame, preprocessors: List[BasePreprocessor]) -> None:
         raise NotImplementedError("Subclasses must implement this method")
 
     @abstractmethod
-    def encode(self, events: pl.DataFrame, preprocessors: List[Preprocessor], allow_unknown: bool = False) -> List[int]:
+    def encode(self, events: pl.DataFrame, preprocessors: List[BasePreprocessor], allow_unknown: bool = False) -> List[int]:
         raise NotImplementedError("Subclasses must implement this method")
 
     def __str__(self) -> str:

@@ -5,29 +5,21 @@ from abc import ABC, abstractmethod
 import os
 from tqdm import tqdm
 
-class Preprocessor(ABC):
+class BasePreprocessor(ABC):
     """
-    Base class for all preprocessors with matching functionality
-
+    Abstract base class for all preprocessors with matching functionality
+    
     Args:
         matching_type (str): the type of matching to perform
         matching_value (str): the value to match against
-        value_column (str): the column containing the numeric values to bin.
     """
-    def __init__(self, matching_type: str, matching_value: str, value_column: str):
+    def __init__(self, matching_type: str, matching_value: str):
         self.matching_type = matching_type
         self.matching_value = matching_value
-        self.value_column = value_column
         
         # validate matching type
         if matching_type not in ["starts_with", "ends_with", "contains", "equals"]:
             raise ValueError(f"Invalid matching type: {matching_type}")
-        
-        # data storage for codes and their values
-        self.data: Dict[str, List[Any]] = {}
-
-        # store the fits for each code
-        self.fits = {}
         
     def _match(self, code: str) -> bool:
         """
@@ -48,6 +40,49 @@ class Preprocessor(ABC):
         elif self.matching_type == "equals":
             return code == self.matching_value
         return False
+    
+    @abstractmethod
+    def fit(self, event_files: List[str]) -> None:
+        """
+        Train the preprocessor on a list of event files.
+
+        Args:
+            event_files (List[str]): the list of event files to train on
+        """
+        raise NotImplementedError("Subclasses must implement this method")
+    
+    @abstractmethod
+    def encode_polars(self, events: pl.DataFrame) -> pl.DataFrame:
+        """
+        Encode the data in the event files.
+
+        Args:
+            events (pl.DataFrame): the events to encode
+
+        Returns:
+            pl.DataFrame: the events with encoded data
+        """
+        raise NotImplementedError("Subclasses must implement this method")
+
+
+class ValuePreprocessor(BasePreprocessor):
+    """
+    Base class for preprocessors that transform numeric/text values in a specific column
+    
+    Args:
+        matching_type (str): the type of matching to perform
+        matching_value (str): the value to match against
+        value_column (str): the column containing the values to transform
+    """
+    def __init__(self, matching_type: str, matching_value: str, value_column: str):
+        super().__init__(matching_type, matching_value)
+        self.value_column = value_column
+        
+        # data storage for codes and their values
+        self.data: Dict[str, List[Any]] = {}
+        
+        # store the fits for each code
+        self.fits = {}
         
     def fit(self, event_files: List[str]) -> None:
         """
@@ -69,13 +104,14 @@ class Preprocessor(ABC):
             for event in events.to_dicts():
 
                 value = event[self.value_column]
-                # Check if the event has a numeric value and matches the matching criteria
+                # Check if the event has a value and matches the matching criteria
                 if value is not None and self._match(event["code"]):
 
-                    # map value to float (in case it is a string)
-                    value = float(value)
-
-                    print(event["code"], value, type(value))
+                    # map value to float (in case it is a string), if it fails skip it as its not a valid value
+                    try:
+                        value = float(value)
+                    except:
+                        continue
 
                     # Add the datapoint to the data dictionary
                     if event["code"] not in self.data:
@@ -98,12 +134,26 @@ class Preprocessor(ABC):
         def encode_row(row):
             code = row["code"]
             value = row[self.value_column]
-            
-            if self._match(code) and value is not None:
+
+            if value is None:
+                return None
+
+            # if the code does not match the matching criteria, return the value as a string
+            if not self._match(code):
+                return str(value)
+
+            # attempt to map value to float (in case it is a string), if it fails skip it as its not a valid value
+            try:
                 value = float(value)
-                encoded = self._encode(code, value)
-                return str(encoded) if encoded is not None else str(value)
-            return str(value) if value is not None else None
+            except:
+                return str(value)
+
+            # encode the value
+            encoded = self._encode(code, value)
+            if encoded is not None:
+                return str(encoded)
+            else:
+                return str(value)
 
         events = events.with_columns(
             pl.struct(["code", self.value_column]).map_elements(encode_row, return_dtype=pl.String).alias(self.value_column)
@@ -111,21 +161,68 @@ class Preprocessor(ABC):
         return events
             
     @abstractmethod
-    def _fit(self, values: np.ndarray) -> Any:
+    def _fit(self) -> None:
         """
         Fit the preprocessor to the training data, implemented by subclasses
-
-        Args:
-            values: array of values to fit the preprocessor to
         """
         raise NotImplementedError("Subclasses must implement this method")
     
     @abstractmethod
-    def _encode(self, values: np.ndarray) -> List[str]:
+    def _encode(self, code: str, value: float) -> str:
         """
-        Encode values using the fitted preprocessor, implemented by subclasses
+        Encode a value using the fitted preprocessor, implemented by subclasses
 
         Args:
-            values: array of values to encode
+            code (str): the code 
+            value (float): the value to encode
+            
+        Returns:
+            str: the encoded value
+        """
+        raise NotImplementedError("Subclasses must implement this method")
+
+
+class CodePreprocessor(BasePreprocessor):
+    """
+    Base class for preprocessors that transform/enrich codes
+    
+    Args:
+        matching_type (str): the type of matching to perform
+        matching_value (str): the value to match against
+    """
+    def __init__(self, matching_type: str, matching_value: str):
+        super().__init__(matching_type, matching_value)
+        
+    def encode_polars(self, events: pl.DataFrame) -> pl.DataFrame:
+        """
+        Encode codes in the events DataFrame by transforming the 'code' column.
+
+        Args:
+            events (pl.DataFrame): the events to encode
+
+        Returns:
+            pl.DataFrame: the events with transformed codes
+        """
+        def transform_row(row):
+            code = row["code"]
+            if self._match(code):
+                return self._transform_code(code)
+            return code
+
+        events = events.with_columns(
+            pl.struct(["code"]).map_elements(transform_row, return_dtype=pl.String).alias("code")
+        )
+        return events
+    
+    @abstractmethod
+    def _transform_code(self, code: str) -> str:
+        """
+        Transform a code, implemented by subclasses
+
+        Args:
+            code (str): the original code
+            
+        Returns:
+            str: the transformed code
         """
         raise NotImplementedError("Subclasses must implement this method")
