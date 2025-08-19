@@ -81,13 +81,13 @@ class CodeEnrichmentPreprocessor(CodePreprocessor):
         
         print(f"Loaded lookup table with {len(self.lookup_table)} entries")
         
-        # Phase 1 Optimization 4: Pre-filter lookup table during fit
+        # Optimization: Pre-filter lookup table during fit
         if self.additional_filters:
             for filter_column, filter_value in self.additional_filters.items():
                 self.lookup_table = self.lookup_table.filter(pl.col(filter_column) == filter_value)
             print(f"Applied filters, table now has {len(self.lookup_table)} entries")
         
-        # Phase 1 Optimization 2: Create simple lookup cache
+        # Optimization: Create simple lookup cache
         self._create_simple_cache()
     
     def _create_simple_cache(self):
@@ -97,7 +97,7 @@ class CodeEnrichmentPreprocessor(CodePreprocessor):
         self.lookup_cache = {}
         
         # Convert to dictionary for O(1) lookups
-        for row in self.lookup_table.iter_rows(named=True):
+        for row in tqdm(self.lookup_table.iter_rows(named=True), desc=f"Creating lookup cache for {self.lookup_file}"):
             key = row[self.code_column]
             try:
                 enriched = self.template.format(**row)
@@ -168,7 +168,7 @@ class CodeEnrichmentPreprocessor(CodePreprocessor):
             # If conversion fails, return original code
             return code
         
-        # Phase 1 Optimization 2: Check cache first (O(1) lookup)
+        # Check cache first (O(1) lookup)
         if code_id in self.lookup_cache:
             return self.lookup_cache[code_id]
         
