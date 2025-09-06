@@ -120,9 +120,10 @@ class Tokenizer(ABC):
                     strings.append("<event>")
                     timestamps.append(format_timestamp(event["timestamp"]))
                 
-                # Add the code
-                strings.append(event["code"])
-                timestamps.append(format_timestamp(event["timestamp"]))
+                # Add the code (skip special placeholder for no-code events)
+                if event["code"] != "STATIC_DATA_NO_CODE":
+                    strings.append(event["code"])
+                    timestamps.append(format_timestamp(event["timestamp"]))
                 
                 # Add the numeric value if specified
                 if event["numeric_value"] is not None:

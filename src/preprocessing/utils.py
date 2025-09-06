@@ -7,7 +7,7 @@ from .base import BasePreprocessor, ValuePreprocessor, CodePreprocessor
 def fit_preprocessors_jointly(preprocessors: List[BasePreprocessor], event_files: List[str]) -> None:
     """
     Fit multiple preprocessors jointly by reading through the data files only once.
-    Handles both ValuePreprocessor and CodePreprocessor types.
+    Handles ValuePreprocessor, CodePreprocessor, and other BasePreprocessor types.
     Fits the preprocessors in place and does not return anything.
     
     Args:
@@ -22,12 +22,17 @@ def fit_preprocessors_jointly(preprocessors: List[BasePreprocessor], event_files
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"Event file not found: {file_path}")
     
-    # Separate value preprocessors and code preprocessors
+    # Separate preprocessors by type
     value_preprocessors = [p for p in preprocessors if isinstance(p, ValuePreprocessor)]
     code_preprocessors = [p for p in preprocessors if isinstance(p, CodePreprocessor)]
+    other_preprocessors = [p for p in preprocessors if not isinstance(p, (ValuePreprocessor, CodePreprocessor))]
     
     # Fit code preprocessors (they don't need to read event files for training data)
     for preprocessor in tqdm(code_preprocessors, desc="Fitting code preprocessors", leave=False):
+        preprocessor.fit(event_files)
+    
+    # Fit other preprocessors (they handle their own fitting logic)
+    for preprocessor in tqdm(other_preprocessors, desc="Fitting other preprocessors", leave=False):
         preprocessor.fit(event_files)
     
     # If there are no value preprocessors, we're done
