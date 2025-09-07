@@ -36,12 +36,13 @@ class DemographicAggregationPreprocessor(BasePreprocessor):
         
         print(f"DemographicAggregationPreprocessor initialized with {len(measurements)} measurements:")
         for i, measurement in enumerate(measurements):
-            print(f"  {i+1}. {measurement['token_pattern']} → {measurement['demographic_code']} "
+            token_prefix = measurement.get('token_prefix', 'NO_PREFIX')
+            print(f"  {i+1}. {measurement['token_pattern']} → {token_prefix}Qx "
                   f"({measurement['aggregation']}, {measurement['num_bins']} bins)")
     
     def _validate_measurements(self):
         """Validate measurement configurations"""
-        required_fields = ["token_pattern", "value_column", "aggregation", "num_bins", "demographic_code"]
+        required_fields = ["token_pattern", "value_column", "aggregation", "num_bins"]
         valid_aggregations = ["mean", "min", "max", "median"]
         valid_value_columns = ["text_value", "numeric_value"]
         
@@ -101,9 +102,11 @@ class DemographicAggregationPreprocessor(BasePreprocessor):
                 
                 self.quantile_bins[measurement_idx] = edges
                 
-                print(f"  {measurement['demographic_code']}: fitted {num_bins} bins from {len(values)} aggregated values")
+                token_prefix = measurement.get('token_prefix', 'NO_PREFIX')
+                print(f"  {token_prefix}Qx: fitted {num_bins} bins from {len(values)} aggregated values")
             else:
-                print(f"  Warning: No valid values found for {measurement['demographic_code']}")
+                token_prefix = measurement.get('token_prefix', 'NO_PREFIX')
+                print(f"  Warning: No valid values found for {token_prefix}Qx")
                 self.quantile_bins[measurement_idx] = None
     
     def _aggregate_subject_measurement(self, subject_events: pl.DataFrame, measurement: Dict[str, Any]) -> Optional[float]:
@@ -202,21 +205,17 @@ class DemographicAggregationPreprocessor(BasePreprocessor):
                     
                     if bin_label is not None:
                         # Create demographic event
-                        demographic_code = measurement["demographic_code"]
-                        prefix = measurement.get("prefix", "")
+                        token_prefix = measurement.get("token_prefix", "")
                         insert_code = measurement.get("insert_code", True)
                         
                         if insert_code:
                             # Code and value as separate tokens
-                            code = f"{prefix}{demographic_code}" if prefix else demographic_code
+                            code = token_prefix.rstrip("//") if token_prefix else "DEMOGRAPHIC"
                             text_value = bin_label
                         else:
-                            # Combined format with prefix
+                            # Combined format with full control over prefix
                             code = "STATIC_DATA_NO_CODE"
-                            if prefix:
-                                text_value = f"{prefix}{demographic_code}//{bin_label}"
-                            else:
-                                text_value = f"{demographic_code}//{bin_label}"
+                            text_value = f"{token_prefix}{bin_label}"
                         
                         # Create demographic event with full MEDS schema
                         demographic_event = {}
@@ -281,8 +280,7 @@ if __name__ == "__main__":
             "value_column": "text_value",
             "aggregation": "median",
             "num_bins": 10,
-            "demographic_code": "BMI",
-            "prefix": "",
+            "token_prefix": "BMI//",
             "insert_code": False,
             "remove_original_tokens": True
         },
@@ -291,8 +289,7 @@ if __name__ == "__main__":
             "value_column": "text_value", 
             "aggregation": "max",
             "num_bins": 10,
-            "demographic_code": "HEIGHT",
-            "prefix": "",
+            "token_prefix": "HEIGHT//",
             "insert_code": False,
             "remove_original_tokens": False
         }

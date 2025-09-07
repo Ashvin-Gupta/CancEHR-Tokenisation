@@ -34,8 +34,7 @@ preprocessing:
           value_column: "text_value"
           aggregation: "median"
           num_bins: 10
-          demographic_code: "BMI"
-          prefix: "BMI//"
+          token_prefix: "BMI//"
           insert_code: false
           remove_original_tokens: true
     - type: "ethos_quantile_age"
@@ -73,6 +72,14 @@ preprocessing:
       k: 10
 
 postprocessing:
+    - type: "demographic_sort_order"
+      token_patterns:
+        - "BMI//"           # BMI tokens appear first
+        - "GENDER//"        # Gender tokens second
+        - "MARITAL_STATUS//" # Marital tokens third  
+        - "AGE_T"           # Age tokens fourth (matches both AGE_T1 and AGE_T2)
+        - "RACE//"          # Race tokens last
+        
     - type: "time_interval"
       interval_tokens:
         "5m-15m":

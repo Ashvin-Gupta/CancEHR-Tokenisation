@@ -11,7 +11,7 @@ from typing import List
 from src.preprocessing.base import BasePreprocessor
 from src.postprocessing.base import Postprocessor
 from src.preprocessing import QuantileBinPreprocessor, CodeEnrichmentPreprocessor, LoadStaticDataPreprocessor, EthosQuantileAgePreprocessor, DemographicAggregationPreprocessor
-from src.postprocessing import TimeIntervalPostprocessor
+from src.postprocessing import TimeIntervalPostprocessor, DemographicSortOrderPostprocessor
 from src.preprocessing.utils import fit_preprocessors_jointly
 
 DATASET_DIRS = ["train", "tuning", "held_out"]
@@ -117,6 +117,8 @@ def run_pipeline(config: dict, run_name: str):
         for postprocessing_config in config["postprocessing"]:
             if postprocessing_config["type"] == "time_interval":
                 postprocessor = TimeIntervalPostprocessor(postprocessing_config["interval_tokens"])
+            elif postprocessing_config["type"] == "demographic_sort_order":
+                postprocessor = DemographicSortOrderPostprocessor(postprocessing_config["token_patterns"])
             else:
                 raise ValueError(f"Postprocessor {postprocessing_config['type']} not supported")
             

@@ -141,16 +141,14 @@ Preprocessors transform and enrich raw EHR data before tokenization. They use pa
       value_column: "text_value"
       aggregation: "median"           # mean, min, max, median
       num_bins: 10
-      demographic_code: "BMI"
-      prefix: ""                      # Optional prefix for demographic code
-      insert_code: false              # Whether to insert demographic code
+      token_prefix: "BMI//"           # Token prefix
+      insert_code: false              # Whether to insert code separately
       remove_original_tokens: true    # Remove original BMI measurements
     - token_pattern: "Height (Inches)"
       value_column: "text_value"
       aggregation: "max"              # Use tallest height measurement
       num_bins: 10
-      demographic_code: "HEIGHT"
-      prefix: "DEMO_"
+      token_prefix: "DEMO_"           # Different prefix style
       insert_code: false
       remove_original_tokens: false   # Keep original height measurements
 ```
@@ -166,7 +164,8 @@ Preprocessors transform and enrich raw EHR data before tokenization. They use pa
 - Subject has BMI measurements: [22.1, 23.5, 22.8, 23.0]
 - Median aggregation: 22.9
 - Quantile binning: Q6 (if median falls in 6th quantile)
-- Output: `code=null`, `text_value="BMI//Q6"`, `time=null`
+- With `token_prefix: "BMI//"`: Output `code=null`, `text_value="BMI//Q6"`, `time=null`
+- With `token_prefix: "DEMO_"`: Output `code=null`, `text_value="DEMO_Q6"`, `time=null`
 - Original BMI tokens removed if `remove_original_tokens: true`
 
 **Features:**
