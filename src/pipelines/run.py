@@ -10,8 +10,8 @@ from tqdm import tqdm
 from typing import List
 from src.preprocessing.base import BasePreprocessor
 from src.postprocessing.base import Postprocessor
-from src.preprocessing import QuantileBinPreprocessor, CodeEnrichmentPreprocessor
-from src.postprocessing import TimeIntervalPostprocessor
+from src.preprocessing import QuantileBinPreprocessor, CodeEnrichmentPreprocessor, LoadStaticDataPreprocessor, EthosQuantileAgePreprocessor, DemographicAggregationPreprocessor, CodeMappingPreprocessor
+from src.postprocessing import TimeIntervalPostprocessor, DemographicSortOrderPostprocessor
 from src.preprocessing.utils import fit_preprocessors_jointly
 
 DATASET_DIRS = ["train", "tuning", "held_out"]
@@ -52,9 +52,9 @@ def run_pipeline(config: dict, run_name: str):
     data_files = gather_data_files(config["data"]["path"])
     print(f"Found {len(data_files['train'])} train files, {len(data_files['tuning'])} tuning files, and {len(data_files['held_out'])} held out files")
 
-    # data_files['train'] = data_files['train'][:20]
-    # data_files['tuning'] = data_files['tuning'][:20]
-    # data_files['held_out'] = data_files['held_out'][:20]
+    data_files['train'] = data_files['train']
+    data_files['tuning'] = data_files['tuning']
+    data_files['held_out'] = data_files['held_out']
 
     # Create preprocessors
     preprocessors = []
@@ -77,6 +77,45 @@ def run_pipeline(config: dict, run_name: str):
                     dtypes=preprocessing_config.get("dtypes", None),
                     additional_filters=preprocessing_config.get("additional_filters", None)
                 )
+            elif preprocessing_config["type"] == "load_static_data":
+                preprocessor = LoadStaticDataPreprocessor(
+                    matching_type="",  # Not used for static data
+                    matching_value="", # Not used for static data
+                    csv_filepath=preprocessing_config["csv_filepath"],
+                    subject_id_column=preprocessing_config["subject_id_column"],
+                    columns=preprocessing_config["columns"]
+                )
+            elif preprocessing_config["type"] == "ethos_quantile_age":
+                preprocessor = EthosQuantileAgePreprocessor(
+                    matching_type="",  # Not used for age processing
+                    matching_value="", # Not used for age processing
+                    time_unit=preprocessing_config.get("time_unit", "years"),
+                    num_quantiles=preprocessing_config.get("num_quantiles", 10),
+                    prefix=preprocessing_config.get("prefix", "AGE_"),
+                    insert_t1_code=preprocessing_config.get("insert_t1_code", True),
+                    insert_t2_code=preprocessing_config.get("insert_t2_code", True),
+                    keep_meds_birth=preprocessing_config.get("keep_meds_birth", False)
+                )
+            elif preprocessing_config["type"] == "demographic_aggregation":
+                preprocessor = DemographicAggregationPreprocessor(
+                    matching_type="",  # Not used for demographic aggregation
+                    matching_value="", # Not used for demographic aggregation
+                    measurements=preprocessing_config["measurements"]
+                )
+            elif preprocessing_config["type"] == "code_mapping":
+                preprocessor = CodeMappingPreprocessor(
+                    matching_type=preprocessing_config["matching_type"],
+                    matching_value=preprocessing_config["matching_value"],
+                    mapping_file=preprocessing_config["mapping_file"],
+                    source_column=preprocessing_config["source_column"],
+                    target_column=preprocessing_config["target_column"],
+                    code_extraction_pattern=preprocessing_config["code_extraction_pattern"],
+                    mapping_strategy=preprocessing_config.get("mapping_strategy", "first_sorted"),
+                    output_format=preprocessing_config.get("output_format", "{mapped_code}"),
+                    null_values=preprocessing_config.get("null_values", []),
+                    unmapped_strategy=preprocessing_config.get("unmapped_strategy", "keep"),
+                    unmapped_replacement=preprocessing_config.get("unmapped_replacement", None)
+                )
             else:
                 raise ValueError(f"Preprocessor {preprocessing_config['type']} not supported")
             
@@ -92,6 +131,8 @@ def run_pipeline(config: dict, run_name: str):
         for postprocessing_config in config["postprocessing"]:
             if postprocessing_config["type"] == "time_interval":
                 postprocessor = TimeIntervalPostprocessor(postprocessing_config["interval_tokens"])
+            elif postprocessing_config["type"] == "demographic_sort_order":
+                postprocessor = DemographicSortOrderPostprocessor(postprocessing_config["token_patterns"])
             else:
                 raise ValueError(f"Postprocessor {postprocessing_config['type']} not supported")
             

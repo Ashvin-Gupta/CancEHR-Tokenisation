@@ -31,6 +31,10 @@ class BasePreprocessor(ABC):
         Returns:
             bool: True if the code matches the configured pattern, False otherwise
         """
+        # Handle None or empty codes gracefully
+        if code is None or code == "":
+            return False
+            
         if self.matching_type == "starts_with":
             return code.startswith(self.matching_value)
         elif self.matching_type == "ends_with":

@@ -3,9 +3,48 @@ name: "ethos_tokenization_pipeline"
 data:
     path: "/home/joshua/data/mimic/mimic_iv/meds/mimic_iv_meds/MEDS_cohort/data"
 
-save_path: "/home/joshua/data/mimic/mimic_iv/meds/mimic_iv_meds/tokenized_data"
+save_path: "/home/joshua/data/nightingale/ehr_tokenisation/"
 
 preprocessing:
+    - type: "load_static_data"
+      csv_filepath: "/home/joshua/data/mimic/mimic_iv/mimic_iv/3.1/hosp/admissions.csv"
+      subject_id_column: "subject_id"
+      columns:
+        - column_name: "race"
+          code_template: "DEMOGRAPHICS//RACE"
+          valid_values: ["WHITE", "BLACK", "HISPANIC", "ASIAN", "OTHER"]
+          mappings:
+            "PORTUGUESE": "WHITE"
+            "MULTIPLE RACE/ETHNICITY": "OTHER"
+            "AMERICAN INDIAN/ALASKA NATIVE": "OTHER"
+            "NATIVE HAWAIIAN OR OTHER PACIFIC ISLANDER": "OTHER"
+            "SOUTH AMERICAN": "HISPANIC"
+          map_invalids_to: "RACE_UNKNOWN"
+          value_prefix: "RACE//"
+          insert_code: false
+        - column_name: "marital_status"
+          code_template: "DEMOGRAPHICS//MARITAL_STATUS"
+          valid_values: ["SINGLE", "WIDOWED", "MARRIED", "DIVORCED"]
+          map_invalids_to: "MARITAL_STATUS_UNKNOWN"
+          value_prefix: "MARITAL_STATUS//"
+          insert_code: false
+    - type: "demographic_aggregation"
+      measurements:
+        - token_pattern: "BMI (kg/m2)"
+          value_column: "text_value"
+          aggregation: "median"
+          num_bins: 10
+          token_prefix: "BMI//"
+          insert_code: false
+          remove_original_tokens: true
+    - type: "ethos_quantile_age"
+      time_unit: "years"
+      num_quantiles: 10
+      prefix: "AGE_"
+      insert_t1_code: false
+      insert_t2_code: false
+      keep_meds_birth: true
+
     - type: "quantile_bin"
       matching_type: "starts_with"
       matching_value: "LAB"
@@ -33,6 +72,14 @@ preprocessing:
       k: 10
 
 postprocessing:
+    - type: "demographic_sort_order"
+      token_patterns:
+        - "BMI//"           # BMI tokens appear first
+        - "GENDER//"        # Gender tokens second
+        - "MARITAL_STATUS//" # Marital tokens third  
+        - "AGE_T"           # Age tokens fourth (matches both AGE_T1 and AGE_T2)
+        - "RACE//"          # Race tokens last
+        
     - type: "time_interval"
       interval_tokens:
         "5m-15m":
