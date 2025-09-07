@@ -10,7 +10,7 @@ from tqdm import tqdm
 from typing import List
 from src.preprocessing.base import BasePreprocessor
 from src.postprocessing.base import Postprocessor
-from src.preprocessing import QuantileBinPreprocessor, CodeEnrichmentPreprocessor, LoadStaticDataPreprocessor, EthosQuantileAgePreprocessor, DemographicAggregationPreprocessor
+from src.preprocessing import QuantileBinPreprocessor, CodeEnrichmentPreprocessor, LoadStaticDataPreprocessor, EthosQuantileAgePreprocessor, DemographicAggregationPreprocessor, CodeMappingPreprocessor
 from src.postprocessing import TimeIntervalPostprocessor, DemographicSortOrderPostprocessor
 from src.preprocessing.utils import fit_preprocessors_jointly
 
@@ -52,9 +52,9 @@ def run_pipeline(config: dict, run_name: str):
     data_files = gather_data_files(config["data"]["path"])
     print(f"Found {len(data_files['train'])} train files, {len(data_files['tuning'])} tuning files, and {len(data_files['held_out'])} held out files")
 
-    data_files['train'] = data_files['train'][:2]
-    data_files['tuning'] = data_files['tuning'][:2]
-    data_files['held_out'] = data_files['held_out'][:2]
+    data_files['train'] = data_files['train']
+    data_files['tuning'] = data_files['tuning']
+    data_files['held_out'] = data_files['held_out']
 
     # Create preprocessors
     preprocessors = []
@@ -101,6 +101,20 @@ def run_pipeline(config: dict, run_name: str):
                     matching_type="",  # Not used for demographic aggregation
                     matching_value="", # Not used for demographic aggregation
                     measurements=preprocessing_config["measurements"]
+                )
+            elif preprocessing_config["type"] == "code_mapping":
+                preprocessor = CodeMappingPreprocessor(
+                    matching_type=preprocessing_config["matching_type"],
+                    matching_value=preprocessing_config["matching_value"],
+                    mapping_file=preprocessing_config["mapping_file"],
+                    source_column=preprocessing_config["source_column"],
+                    target_column=preprocessing_config["target_column"],
+                    code_extraction_pattern=preprocessing_config["code_extraction_pattern"],
+                    mapping_strategy=preprocessing_config.get("mapping_strategy", "first_sorted"),
+                    output_format=preprocessing_config.get("output_format", "{mapped_code}"),
+                    null_values=preprocessing_config.get("null_values", []),
+                    unmapped_strategy=preprocessing_config.get("unmapped_strategy", "keep"),
+                    unmapped_replacement=preprocessing_config.get("unmapped_replacement", None)
                 )
             else:
                 raise ValueError(f"Preprocessor {preprocessing_config['type']} not supported")
