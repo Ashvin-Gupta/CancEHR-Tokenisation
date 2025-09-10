@@ -11,6 +11,7 @@ from typing import List
 from src.preprocessing.base import BasePreprocessor
 from src.postprocessing.base import Postprocessor
 from src.preprocessing import QuantileBinPreprocessor, CodeEnrichmentPreprocessor, LoadStaticDataPreprocessor, EthosQuantileAgePreprocessor, DemographicAggregationPreprocessor
+from src.preprocessing.code_truncation import CodeTruncationPreprocessor
 from src.postprocessing import TimeIntervalPostprocessor, DemographicSortOrderPostprocessor
 from src.preprocessing.utils import fit_preprocessors_jointly
 
@@ -26,144 +27,147 @@ def run_pipeline(config: dict, run_name: str, overwrite: bool = False):
         overwrite (bool): whether to overwrite the save directory if it exists
     """
 
-    print('Able to run pipeline via HPC')
+    # Validate all the expected fields are present in the config
+    validate_config(config)
 
-    # # Validate all the expected fields are present in the config
-    # validate_config(config)
+    run_directory = os.path.join(config["save_path"], run_name)
 
-    # run_directory = os.path.join(config["save_path"], run_name)
+    # Check if save directory already exists
+    if os.path.exists(run_directory):
+        if overwrite:
+            print(f"Overwriting existing directory: {run_directory}")
+            shutil.rmtree(run_directory)
+        else:
+            print(f"Error: Save directory {run_directory} already exists. Use the --overwrite flag to overwrite it.")
+            return
 
-    # # Check if save directory already exists
-    # if os.path.exists(run_directory):
-    #     if overwrite:
-    #         print(f"Overwriting existing directory: {run_directory}")
-    #         shutil.rmtree(run_directory)
-    #     else:
-    #         print(f"Error: Save directory {run_directory} already exists. Use the --overwrite flag to overwrite it.")
-    #         return
+    # Create save_path directory
+    os.makedirs(run_directory)
 
-    # # Create save_path directory
-    # os.makedirs(run_directory)
+    # ... (rest of the run_pipeline function remains the same)
+    # Create subdirectories for each dataset
+    for dataset in DATASET_DIRS:
+        os.makedirs(os.path.join(config["save_path"], run_name, dataset), exist_ok=True)
 
-    # # ... (rest of the run_pipeline function remains the same)
-    # # Create subdirectories for each dataset
-    # for dataset in DATASET_DIRS:
-    #     os.makedirs(os.path.join(config["save_path"], run_name, dataset), exist_ok=True)
+    # Check data is valid and load it
+    data_files = gather_data_files(config["data"]["path"])
+    print(f"Found {len(data_files['train'])} train files, {len(data_files['tuning'])} tuning files, and {len(data_files['held_out'])} held out files")
 
-    # # Check data is valid and load it
-    # data_files = gather_data_files(config["data"]["path"])
-    # print(f"Found {len(data_files['train'])} train files, {len(data_files['tuning'])} tuning files, and {len(data_files['held_out'])} held out files")
+    data_files['train'] = data_files['train']
+    data_files['tuning'] = data_files['tuning']
+    data_files['held_out'] = data_files['held_out']
 
-    # data_files['train'] = data_files['train']
-    # data_files['tuning'] = data_files['tuning']
-    # data_files['held_out'] = data_files['held_out']
-
-    # # Create preprocessors
-    # preprocessors = []
-    # if "preprocessing" in config:
-    #     for preprocessing_config in config["preprocessing"]:
-    #         if preprocessing_config["type"] == "quantile_bin":
-    #             preprocessor = QuantileBinPreprocessor(
-    #                 matching_type=preprocessing_config["matching_type"],
-    #                 matching_value=preprocessing_config["matching_value"],
-    #                 k=preprocessing_config["k"],
-    #                 value_column=preprocessing_config["value_column"]
-    #             )
-    #         elif preprocessing_config["type"] == "code_enrichment":
-    #             preprocessor = CodeEnrichmentPreprocessor(
-    #                 matching_type=preprocessing_config["matching_type"],
-    #                 matching_value=preprocessing_config["matching_value"],
-    #                 lookup_file=preprocessing_config["lookup_file"],
-    #                 template=preprocessing_config["template"],
-    #                 code_column=preprocessing_config["code_column"],
-    #                 dtypes=preprocessing_config.get("dtypes", None),
-    #                 additional_filters=preprocessing_config.get("additional_filters", None)
-    #             )
-    #         elif preprocessing_config["type"] == "load_static_data":
-    #             preprocessor = LoadStaticDataPreprocessor(
-    #                 matching_type="",  # Not used for static data
-    #                 matching_value="", # Not used for static data
-    #                 csv_filepath=preprocessing_config["csv_filepath"],
-    #                 subject_id_column=preprocessing_config["subject_id_column"],
-    #                 columns=preprocessing_config["columns"]
-    #             )
-    #         elif preprocessing_config["type"] == "ethos_quantile_age":
-    #             preprocessor = EthosQuantileAgePreprocessor(
-    #                 matching_type="",  # Not used for age processing
-    #                 matching_value="", # Not used for age processing
-    #                 time_unit=preprocessing_config.get("time_unit", "years"),
-    #                 num_quantiles=preprocessing_config.get("num_quantiles", 10),
-    #                 prefix=preprocessing_config.get("prefix", "AGE_"),
-    #                 insert_t1_code=preprocessing_config.get("insert_t1_code", True),
-    #                 insert_t2_code=preprocessing_config.get("insert_t2_code", True),
-    #                 keep_meds_birth=preprocessing_config.get("keep_meds_birth", False)
-    #             )
-    #         elif preprocessing_config["type"] == "demographic_aggregation":
-    #             preprocessor = DemographicAggregationPreprocessor(
-    #                 matching_type="",  # Not used for demographic aggregation
-    #                 matching_value="", # Not used for demographic aggregation
-    #                 measurements=preprocessing_config["measurements"]
-    #             )
-    #         else:
-    #             raise ValueError(f"Preprocessor {preprocessing_config['type']} not supported")
+    # Create preprocessors
+    preprocessors = []
+    if "preprocessing" in config:
+        for preprocessing_config in config["preprocessing"]:
+            if preprocessing_config["type"] == "quantile_bin":
+                preprocessor = QuantileBinPreprocessor(
+                    matching_type=preprocessing_config["matching_type"],
+                    matching_value=preprocessing_config["matching_value"],
+                    k=preprocessing_config["k"],
+                    value_column=preprocessing_config["value_column"]
+                )
+            elif preprocessing_config["type"] == "code_truncation":
+                preprocessor = CodeTruncationPreprocessor(
+                    matching_type=preprocessing_config["matching_type"],
+                    matching_value=preprocessing_config["matching_value"],
+                )
+            elif preprocessing_config["type"] == "code_enrichment":
+                preprocessor = CodeEnrichmentPreprocessor(
+                    matching_type=preprocessing_config["matching_type"],
+                    matching_value=preprocessing_config["matching_value"],
+                    lookup_file=preprocessing_config["lookup_file"],
+                    template=preprocessing_config["template"],
+                    code_column=preprocessing_config["code_column"],
+                    dtypes=preprocessing_config.get("dtypes", None),
+                    additional_filters=preprocessing_config.get("additional_filters", None)
+                )
+            elif preprocessing_config["type"] == "load_static_data":
+                preprocessor = LoadStaticDataPreprocessor(
+                    matching_type="",  # Not used for static data
+                    matching_value="", # Not used for static data
+                    csv_filepath=preprocessing_config["csv_filepath"],
+                    subject_id_column=preprocessing_config["subject_id_column"],
+                    columns=preprocessing_config["columns"]
+                )
+            elif preprocessing_config["type"] == "ethos_quantile_age":
+                preprocessor = EthosQuantileAgePreprocessor(
+                    matching_type="",  # Not used for age processing
+                    matching_value="", # Not used for age processing
+                    time_unit=preprocessing_config.get("time_unit", "years"),
+                    num_quantiles=preprocessing_config.get("num_quantiles", 10),
+                    prefix=preprocessing_config.get("prefix", "AGE_"),
+                    insert_t1_code=preprocessing_config.get("insert_t1_code", True),
+                    insert_t2_code=preprocessing_config.get("insert_t2_code", True),
+                    keep_meds_birth=preprocessing_config.get("keep_meds_birth", False)
+                )
+            elif preprocessing_config["type"] == "demographic_aggregation":
+                preprocessor = DemographicAggregationPreprocessor(
+                    matching_type="",  # Not used for demographic aggregation
+                    matching_value="", # Not used for demographic aggregation
+                    measurements=preprocessing_config["measurements"]
+                )
+            else:
+                raise ValueError(f"Preprocessor {preprocessing_config['type']} not supported")
             
-    #         preprocessors.append(preprocessor)
+            preprocessors.append(preprocessor)
 
-    # # Fit all preprocessors jointly
-    # if preprocessors:
-    #     fit_preprocessors_jointly(preprocessors, data_files["train"])
+    # Fit all preprocessors jointly
+    if preprocessors:
+        fit_preprocessors_jointly(preprocessors, data_files["train"])
 
-    # # Load postprocessors
-    # postprocessors = []
-    # if "postprocessing" in config:
-    #     for postprocessing_config in config["postprocessing"]:
-    #         if postprocessing_config["type"] == "time_interval":
-    #             postprocessor = TimeIntervalPostprocessor(postprocessing_config["interval_tokens"])
-    #         elif postprocessing_config["type"] == "demographic_sort_order":
-    #             postprocessor = DemographicSortOrderPostprocessor(postprocessing_config["token_patterns"])
-    #         else:
-    #             raise ValueError(f"Postprocessor {postprocessing_config['type']} not supported")
+    # Load postprocessors
+    postprocessors = []
+    if "postprocessing" in config:
+        for postprocessing_config in config["postprocessing"]:
+            if postprocessing_config["type"] == "time_interval":
+                postprocessor = TimeIntervalPostprocessor(postprocessing_config["interval_tokens"])
+            elif postprocessing_config["type"] == "demographic_sort_order":
+                postprocessor = DemographicSortOrderPostprocessor(postprocessing_config["token_patterns"])
+            else:
+                raise ValueError(f"Postprocessor {postprocessing_config['type']} not supported")
             
-    #         postprocessors.append(postprocessor)
+            postprocessors.append(postprocessor)
 
-    # # Load tokenizer
-    # if config["tokenization"]["tokenizer"] == "word_level":
-    #     tokenizer = WordLevelTokenizer(
-    #         vocab_size=config["tokenization"]["vocab_size"],
-    #         insert_event_tokens=config["tokenization"]["insert_event_tokens"],
-    #         insert_numeric_tokens=config["tokenization"]["insert_numeric_tokens"],
-    #         insert_text_tokens=config["tokenization"]["insert_text_tokens"]
-    #     )
-    # else:
-    #     raise ValueError(f"Tokenizer {config['tokenization']['tokenizer']} not supported")
+    # Load tokenizer
+    if config["tokenization"]["tokenizer"] == "word_level":
+        tokenizer = WordLevelTokenizer(
+            vocab_size=config["tokenization"]["vocab_size"],
+            insert_event_tokens=config["tokenization"]["insert_event_tokens"],
+            insert_numeric_tokens=config["tokenization"]["insert_numeric_tokens"],
+            insert_text_tokens=config["tokenization"]["insert_text_tokens"]
+        )
+    else:
+        raise ValueError(f"Tokenizer {config['tokenization']['tokenizer']} not supported")
 
-    # # Fit tokenizer to train data
-    # tokenizer.train(data_files["train"], preprocessors, postprocessors)
+    # Fit tokenizer to train data
+    tokenizer.train(data_files["train"], preprocessors, postprocessors)
 
-    # # encode train data
-    # encode_files(tokenizer, data_files["train"], os.path.join(run_directory, "train"), preprocessors, postprocessors)
+    # encode train data
+    encode_files(tokenizer, data_files["train"], os.path.join(run_directory, "train"), preprocessors, postprocessors)
 
-    # # encode tuning data
-    # encode_files(tokenizer, data_files["tuning"], os.path.join(run_directory, "tuning"), preprocessors, postprocessors)
+    # encode tuning data
+    encode_files(tokenizer, data_files["tuning"], os.path.join(run_directory, "tuning"), preprocessors, postprocessors)
 
-    # # encode held out data
-    # encode_files(tokenizer, data_files["held_out"], os.path.join(run_directory, "held_out"), preprocessors, postprocessors)
+    # encode held out data
+    encode_files(tokenizer, data_files["held_out"], os.path.join(run_directory, "held_out"), preprocessors, postprocessors)
 
-    # # store a copy of the config file
-    # with open(os.path.join(run_directory, "config.yaml"), "w") as f:
-    #     yaml.dump(config, f)
+    # store a copy of the config file
+    with open(os.path.join(run_directory, "config.yaml"), "w") as f:
+        yaml.dump(config, f)
 
-    # # store metadata
-    # metadata = {
-    #     "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-    #     "run_name": run_name,
-    #     "config": config,
-    # }
-    # with open(os.path.join(run_directory, "metadata.json"), "w") as f:
-    #     json.dump(metadata, f)
+    # store metadata
+    metadata = {
+        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "run_name": run_name,
+        "config": config,
+    }
+    with open(os.path.join(run_directory, "metadata.json"), "w") as f:
+        json.dump(metadata, f)
 
-    # # store the vocab file as a csv
-    # tokenizer.vocab.write_csv(os.path.join(run_directory, "vocab.csv"))
+    # store the vocab file as a csv
+    tokenizer.vocab.write_csv(os.path.join(run_directory, "vocab.csv"))
 
 def validate_config(config: dict):
     """

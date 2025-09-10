@@ -1,0 +1,59 @@
+# File: src/pipelines/config/cprd_test.yaml
+
+name: "cprd_custom_tokenization_pipeline"
+
+# 1. Point to your data and define where to save the output
+data:
+    path: "/data/scratch/qc25022/PancreaticCancer/CleanData" 
+
+save_path: "/data/scratch/qc25022/PancreaticCancer/TokenisedData" 
+
+# 2. Define the preprocessing steps in order
+preprocessing:
+    # First, truncate all relevant codes
+    - type: "code_truncation"
+      matching_type: "contains"
+      matching_value: "//"
+
+    # Next, bin the LAB codes
+    - type: "quantile_bin"
+      matching_type: "starts_with"
+      matching_value: "LAB//"
+      value_column: "numeric_value" # Assuming LAB values are in this column
+      k: 10 # 10 quantile bins
+
+    # Then, bin the BMI codes
+    - type: "quantile_bin"
+      matching_type: "equals"
+      matching_value: "BMI"
+      value_column: "text_value" # Based on your example, BMI is in the text column
+      k: 10 # 10 quantile bins
+
+# 3. Add time intervals after tokenization
+postprocessing:
+    - type: "time_interval"
+      interval_tokens:
+        "1d-2d": {min: 1440, max: 2880}
+        "2d-4d": {min: 2880, max: 5760}
+        "4d-7d": {min: 5760, max: 10080}
+        "7d-12d": {min: 10080, max: 17280}
+        "12d-20d": {min: 17280, max: 28800}
+        "20d-30d": {min: 28800, max: 43200}
+        "30d-2mt": {min: 43200, max: 86400}
+        "2mt-4mt": {min: 86400, max: 172800}
+        "4mt-6mt": {min: 172800, max: 259200}
+        "6mt-8mt": {min: 259200, max: 345600}
+        "8mt-10mt": {min: 345600, max: 432000}
+        "10mt-12mt": {min: 432000, max: 518400}
+        "12mt-18mt": {min: 518400, max: 604800}
+        "18mt-24mt": {min: 604800, max: 691200}
+        "24mt-": {min: 691200}
+        
+
+# 4. Define the tokenizer settings
+tokenization:
+    tokenizer: "word_level"
+    vocab_size: 5000 # Adjust as needed
+    insert_event_tokens: False
+    insert_numeric_tokens: False
+    insert_text_tokens: False
