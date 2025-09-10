@@ -1,6 +1,6 @@
 # Electronic Health Record (EHR) Tokenization
 
-A Python library for tokenizing electronic health record (EHR) data in MEDS format, designed for machine learning applications in healthcare. Edited for CPRD data.
+A Python library for tokenizing electronic health record (EHR) data in MEDS format, designed for machine learning applications in healthcare. Edited for CPRD data by Ashvin Gupta.
 
 ## Features
 
