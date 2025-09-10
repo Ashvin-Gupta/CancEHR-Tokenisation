@@ -11,9 +11,9 @@ idna==3.10
 iniconfig==2.1.0
 jsonschema==4.24.0
 jsonschema-specifications==2025.4.1
-meds==0.3.3
-meds_testing_helpers==0.3.0
-MEDS_transforms==0.2.4
+meds
+meds_testing_helpers
+MEDS_transforms
 MIMIC-IV-MEDS==0.0.6
 numpy==2.3.0
 omegaconf==2.3.0
