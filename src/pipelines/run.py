@@ -259,4 +259,4 @@ if __name__ == "__main__":
     with open(args.config_filepath, "r") as f:
         config = yaml.safe_load(f)
 
-    run_pipeline(config, args.run_name)
+    run_pipeline(config, args.run_name, args.overwrite)
