@@ -6,7 +6,7 @@
 #$ -j n
 
 # Set the base directory for your project
-BASE_DIR="/data/home/qc25022/CancEHR-tokeniser"
+BASE_DIR="/data/home/qc25022/CancEHR-Tokenisation"
 
 # Define and create log directories using absolute paths
 # The -p flag ensures the directories are created if they don't exist
