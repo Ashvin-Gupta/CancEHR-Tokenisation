@@ -3,6 +3,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# HPC Outputs
+logo/
+loge/
+
 # C extensions
 *.so
 
