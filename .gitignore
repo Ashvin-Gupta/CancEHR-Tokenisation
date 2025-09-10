@@ -4,8 +4,7 @@ __pycache__/
 *$py.class
 
 # HPC Outputs
-logo/
-loge/
+HPC_Files/
 
 # C extensions
 *.so
