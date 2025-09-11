@@ -42,7 +42,12 @@ def fit_preprocessors_jointly(preprocessors: List[BasePreprocessor], event_files
     # Loop through each event file once and collect data for all value preprocessors
     for event_file in tqdm(event_files, desc="Collecting data for value preprocessors"):
         events = pl.read_parquet(event_file)
-        
+
+        if 'numeric_value' in events.columns and 'text_value' not in events.columns:
+            events = events.with_columns(
+                pl.col("numeric_value").cast(pl.Utf8).alias("text_value")
+            )
+
         for event in events.to_dicts():
             # Check each value preprocessor to see if this event matches its criteria
             for preprocessor in value_preprocessors:

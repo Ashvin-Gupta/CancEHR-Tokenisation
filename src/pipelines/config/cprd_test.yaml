@@ -10,9 +10,6 @@ save_path: "/data/scratch/qc25022/PancreaticCancer/TokenisedData"
 
 # 2. Define the preprocessing steps in order
 preprocessing:
-    # First, reshape the data to add a text_value column
-    - type: "data_reshaping"
-
     # Then, truncate all relevant codes
     - type: "code_truncation"
       matching_type: "contains"

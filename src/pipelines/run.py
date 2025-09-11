@@ -12,7 +12,6 @@ from src.preprocessing.base import BasePreprocessor
 from src.postprocessing.base import Postprocessor
 from src.preprocessing import QuantileBinPreprocessor, CodeEnrichmentPreprocessor, LoadStaticDataPreprocessor, EthosQuantileAgePreprocessor, DemographicAggregationPreprocessor
 from src.preprocessing.code_truncation import CodeTruncationPreprocessor
-from src.preprocessing.data_reshaping import DataReshapingPreprocessor
 from src.postprocessing import TimeIntervalPostprocessor, DemographicSortOrderPostprocessor
 from src.preprocessing.utils import fit_preprocessors_jointly
 
@@ -62,9 +61,7 @@ def run_pipeline(config: dict, run_name: str, overwrite: bool = False):
     preprocessors = []
     if "preprocessing" in config:
         for preprocessing_config in config["preprocessing"]:
-            if preprocessing_config["type"] == "data_reshaping":
-                preprocessor = DataReshapingPreprocessor()
-            elif preprocessing_config["type"] == "quantile_bin":
+            if preprocessing_config["type"] == "quantile_bin":
                 preprocessor = QuantileBinPreprocessor(
                     matching_type=preprocessing_config["matching_type"],
                     matching_value=preprocessing_config["matching_value"],
