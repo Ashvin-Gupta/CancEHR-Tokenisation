@@ -8,6 +8,10 @@ class DataReshapingPreprocessor(BasePreprocessor):
     and 'text_value' columns. It creates 'text_value' by casting
     the existing 'numeric_value' column to a string.
     """
+    def __init__(self, **kwargs):
+        # This preprocessor applies to all data, so it doesn't need real matching values. We provide dummy values to satisfy the parent class's __init__ method.
+        super().__init__(matching_type="equals", matching_value="")
+
     def fit(self, event_files: List[str]) -> None:
         """This preprocessor is rule-based and does not need to be fitted."""
         pass
