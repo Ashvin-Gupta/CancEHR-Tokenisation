@@ -14,7 +14,7 @@ BASE_DIR="/data/home/qc25022/CancEHR-Tokenisation"
 
 # --- Environment Setup ---
 module load intel intel-mpi python
-source /data/home/qc25022/dask_intel_mpi_venv/bin/activate
+source /data/home/qc25022/CancEHR-Tokenisation/env/bin/activate
 
 # --- Path Definitions ---
 CONFIG_FILE="${BASE_DIR}/src/pipelines/config/cprd_test.yaml"
