@@ -70,7 +70,8 @@ class Tokenizer(ABC):
                     "code": event["code"],
                     "timestamp": event["time"],
                     "numeric_value": event["numeric_value"],
-                    "text_value": event["text_value"]
+                    # "text_value": event["text_value"]
+                    "text_value": None
                 }
                 event_list.append(event)
 
@@ -141,7 +142,7 @@ class Tokenizer(ABC):
                         timestamps.append(format_timestamp(event["timestamp"]))
                 
                 # Add the text value if specified
-                if event["text_value"] is not None:
+                if event["text_value"] is not None: # TODO: Remove this once text values are supported
                     if self.insert_text_tokens:
                         strings.append(self.text_start_token)
                         timestamps.append(format_timestamp(event["timestamp"]))
