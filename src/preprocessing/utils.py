@@ -46,8 +46,7 @@ def fit_preprocessors_jointly(preprocessors: List[BasePreprocessor], event_files
         for event in events.to_dicts():
             # Check each value preprocessor to see if this event matches its criteria
             for preprocessor in value_preprocessors:
-                # value = event[preprocessor.value_column]
-                value = event["numeric_value"]
+                value = event[preprocessor.value_column]
                 if value is not None and preprocessor._match(event["code"]):
                     # attempt to map value to float (in case it is a string), if it fails skip it as its not a valid value
                     try:
