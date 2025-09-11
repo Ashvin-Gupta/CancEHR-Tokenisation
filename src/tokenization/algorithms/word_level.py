@@ -68,6 +68,12 @@ class WordLevelTokenizer(Tokenizer):
             # Read one file at a time for memory efficiency processing
             events = pl.read_parquet(file_path)
 
+            # Adding a text_value column to the events
+            if "numeric_value" in events.columns and "text_value" not in events.columns:
+                events = events.with_columns(
+                    pl.col("numeric_value").cast(pl.Utf8).alias("text_value")
+                )
+
             # Apply preprocessors to the events
             if len(preprocessors) > 0:
                 for preprocessor in preprocessors:
