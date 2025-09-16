@@ -43,21 +43,30 @@ def fit_preprocessors_jointly(preprocessors: List[BasePreprocessor], event_files
     for event_file in tqdm(event_files, desc="Collecting data for value preprocessors"):
         events = pl.read_parquet(event_file)
         
-        for event in events.to_dicts():
-            # Check each value preprocessor to see if this event matches its criteria
+        transformed_events = events
+        for preprocessor in code_preprocessors:
+            transformed_events = preprocessor.encode_polars(transformed_events)
+            
+        # Ensure the necessary value columns exist on the transformed data
+        if "numeric_value" in transformed_events.columns and "text_value" not in transformed_events.columns:
+            transformed_events = transformed_events.with_columns(
+                pl.col("numeric_value").cast(pl.Utf8).alias("text_value")
+            )
+
+        # Now, collect data for fitting from the *transformed* events
+        for event in transformed_events.to_dicts():
             for preprocessor in value_preprocessors:
                 value = event[preprocessor.value_column]
+                
                 if value is not None and preprocessor._match(event["code"]):
-                    # attempt to map value to float (in case it is a string), if it fails skip it as its not a valid value
                     try:
-                        value = float(value)
-                    except:
+                        value_float = float(value)
+                    except (ValueError, TypeError):
                         continue
-                    # Add the datapoint to this preprocessor's data dictionary
                     if event["code"] not in preprocessor.data:
                         preprocessor.data[event["code"]] = []
-                    preprocessor.data[event["code"]].append(value)
+                    preprocessor.data[event["code"]].append(value_float)
     
-    # Now fit each value preprocessor to its collected data
+    # Finally, fit the value preprocessors with the correctly collected data
     for preprocessor in tqdm(value_preprocessors, desc="Fitting value preprocessors", leave=False):
-        preprocessor._fit() 
+        preprocessor._fit()
