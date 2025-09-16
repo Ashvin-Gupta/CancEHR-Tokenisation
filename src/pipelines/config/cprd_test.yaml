@@ -4,9 +4,9 @@ name: "cprd_custom_tokenization_pipeline"
 
 # 1. Point to your data and define where to save the output
 data:
-    path: "/data/scratch/qc25022/PancreaticCancer/CleanData" 
+    path: "/data/scratch/qc25022/liver/event_streams" 
 
-save_path: "/data/scratch/qc25022/PancreaticCancer/TokenisedData" 
+save_path: "/data/scratch/qc25022/liver/tokenised_data" 
 
 # 2. Define the preprocessing steps in order
 preprocessing:
@@ -15,6 +15,47 @@ preprocessing:
       matching_type: "contains"
       matching_value: "//"
 
+    # Then, add the static data
+    - type: "load_static_data"
+      # matching_type: "equals"
+      # matching_value: "MEDS_BIRTH"
+      csv_filepath: "/data/home/qc25022/cancer-extraction-pipeline/output/liver_study/subject_information.csv"
+      subject_id_column: "subject_id"
+      columns:
+      # Gender
+      - column_name: "gender"
+        value_prefix: "GENDER//"
+        insert_code: False
+        mappings:
+          "male": "M"
+          "female": "F"
+      
+      # Ethnicity
+      - column_name: "ethnicity"
+        value_prefix: "ETHNICITY//"
+        insert_code: False
+        valid_values: ["WHITE", "BLACK", "ASIAN", "MIXED", "OTHER"]
+        mappings:
+          "White": "WHITE"
+          "Indian": "ASIAN"
+          "Bl_Carib": "BLACK"
+          "Other": "OTHER"
+          "Oth_Asian": "ASIAN"
+          "Bl_Afric": "BLACK"
+          "Pakistani": "ASIAN"
+          "MIXED": "MIXED"
+          "Asian or British Asian": "ASIAN"
+          "Bl_Other": "BLACK"
+          "Chinese": "ASIAN"
+          "Black or Black British": "BLACK"
+          "Bangladeshi": "ASIAN"
+          "Unknown": "OTHER"
+      
+      # Region 
+      - column_name: "region"
+        value_prefix: "REGION//"
+        insert_code: False
+        
     # Next, bin the LAB codes
     - type: "quantile_bin"
       matching_type: "starts_with"
@@ -47,7 +88,8 @@ postprocessing:
         "10mt-12mt": {min: 432000, max: 518400}
         "12mt-18mt": {min: 518400, max: 604800}
         "18mt-24mt": {min: 604800, max: 691200}
-        "24mt-": {min: 691200}
+        "24mt-60mt": {min: 691200, max: 1555200}
+        "60mt-": {min: 1555200}
         
 
 # 4. Define the tokenizer settings
