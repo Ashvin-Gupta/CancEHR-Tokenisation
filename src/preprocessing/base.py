@@ -102,14 +102,19 @@ class ValuePreprocessor(BasePreprocessor):
                 raise FileNotFoundError(f"Event file not found: {file_path}")
             
         # Loop through each event file and populate the data dictionary
+        codes_seen = set()
+        matching_codes = set()
+        
         for event_file in tqdm(event_files, desc="Fitting preprocessor", leave=False):
             events = pl.read_parquet(event_file)
             
             for event in events.to_dicts():
-
+                codes_seen.add(event["code"])
+                
                 value = event[self.value_column]
                 # Check if the event has a value and matches the matching criteria
                 if value is not None and self._match(event["code"]):
+                    matching_codes.add(event["code"])
 
                     # map value to float (in case it is a string), if it fails skip it as its not a valid value
                     try:
@@ -121,6 +126,7 @@ class ValuePreprocessor(BasePreprocessor):
                     if event["code"] not in self.data:
                         self.data[event["code"]] = []
                     self.data[event["code"]].append(value)
+        
         
         # Call the child class's _fit() method to fit the preprocessor to the data
         self._fit()
@@ -135,42 +141,33 @@ class ValuePreprocessor(BasePreprocessor):
         Returns:
             pl.DataFrame: the events with the encoded self.value_column column
         """
-        other_value_column = 'numeric_value' if self.value_column == 'text_value' else 'text_value'
-
         def encode_row(row):
             code = row["code"]
             value = row[self.value_column]
-            other_value = row[other_value_column]
 
             if value is None:
-                return {"value_col_out": None, "other_col_out": other_value}
+                return None
 
             # if the code does not match the matching criteria, return the value as a string
             if not self._match(code):
-                return {"value_col_out": str(value), "other_col_out": other_value}
+                return str(value)
 
             # attempt to map value to float (in case it is a string), if it fails skip it as its not a valid value
             try:
                 value = float(value)
             except:
-                return {"value_col_out": str(value), "other_col_out": other_value}
+                return str(value)
 
             # encode the value
             encoded = self._encode(code, value)
             if encoded is not None:
-                return {"value_col_out": str(encoded), "other_col_out": None}
+                return str(encoded)
             else:
-                return {"value_col_out": str(value), "other_col_out": other_value}
+                return str(value)
 
         events = events.with_columns(
-            pl.struct(["code", self.value_column, other_value_column])
-            .map_elements(encode_row, return_dtype=pl.Struct([
-                pl.Field("value_col_out", pl.Utf8),
-                pl.Field("other_col_out", events.schema[other_value_column])
-            ]))
-            .alias("updated_values")
-        ).unnest("updated_values").rename({"value_col_out": self.value_column, "other_col_out": other_value_column})
-        
+            pl.struct(["code", self.value_column]).map_elements(encode_row, return_dtype=pl.String).alias(self.value_column)
+        )
         return events
             
     @abstractmethod
