@@ -38,20 +38,20 @@ preprocessing:
         insert_code: False
         valid_values: ["WHITE", "BLACK", "ASIAN", "MIXED", "OTHER"]
         mappings:
-          "White": "WHITE"
-          "Indian": "ASIAN"
-          "Bl_Carib": "BLACK"
-          "Other": "OTHER"
-          "Oth_Asian": "ASIAN"
-          "Bl_Afric": "BLACK"
-          "Pakistani": "ASIAN"
+          "WHITE": "WHITE"
+          "INDIAN": "ASIAN"
+          "BL CARIB": "BLACK"
+          "OTHER": "OTHER"
+          "OTH ASIAN": "ASIAN"
+          "BL AFRIC": "BLACK"
+          "PAKISTANI": "ASIAN"
           "MIXED": "MIXED"
-          "Asian or British Asian": "ASIAN"
-          "Bl_Other": "BLACK"
-          "Chinese": "ASIAN"
-          "Black or Black British": "BLACK"
-          "Bangladeshi": "ASIAN"
-          "Unknown": "OTHER"
+          "ASIAN OR BRITISH_ASIAN": "ASIAN"
+          "BL OTHER": "BLACK"
+          "CHINESE": "ASIAN"
+          "BLACK OR BLACK BRITISH": "BLACK"
+          "BANGLADESHI": "ASIAN"
+          "UNKNOWN": "OTHER"
       
       # Region 
       - column_name: "region"
@@ -69,8 +69,20 @@ preprocessing:
     # Then, bin the BMI codes
     - type: "quantile_bin"
       matching_type: "equals"
-      matching_value: "BMI"
-      value_column: "text_value" # Based on your example, BMI is in the text column
+      matching_value: "bmi"
+      value_column: "numeric_value"
+      k: 10 # 10 quantile bins
+    
+    - type: "quantile_bin"
+      matching_type: "equals"
+      matching_value: "height"
+      value_column: "numeric_value" 
+      k: 10 # 10 quantile bins
+    
+    - type: "quantile_bin"
+      matching_type: "equals"
+      matching_value: "weight"
+      value_column: "numeric_value" 
       k: 10 # 10 quantile bins
 
 # 3. Add time intervals after tokenization

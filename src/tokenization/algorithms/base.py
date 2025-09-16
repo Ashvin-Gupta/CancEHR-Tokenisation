@@ -141,7 +141,7 @@ class Tokenizer(ABC):
                         timestamps.append(format_timestamp(event["timestamp"]))
                 
                 # Add the text value if specified
-                if event["text_value"] is not None:
+                elif event["text_value"] is not None:
                     if self.insert_text_tokens:
                         strings.append(self.text_start_token)
                         timestamps.append(format_timestamp(event["timestamp"]))
