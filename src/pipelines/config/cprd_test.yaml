@@ -24,6 +24,7 @@ preprocessing:
       columns:
       # Gender
       - column_name: "gender"
+        code_template: "DEMOGRAPHICS//GENDER"
         value_prefix: "GENDER//"
         insert_code: False
         mappings:
@@ -32,6 +33,7 @@ preprocessing:
       
       # Ethnicity
       - column_name: "ethnicity"
+        code_template: "DEMOGRAPHICS//ETHNICITY"
         value_prefix: "ETHNICITY//"
         insert_code: False
         valid_values: ["WHITE", "BLACK", "ASIAN", "MIXED", "OTHER"]
@@ -53,6 +55,7 @@ preprocessing:
       
       # Region 
       - column_name: "region"
+        code_template: "DEMOGRAPHICS//REGION"
         value_prefix: "REGION//"
         insert_code: False
         
