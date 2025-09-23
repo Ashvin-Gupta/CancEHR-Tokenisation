@@ -56,9 +56,9 @@ class QuantileBinPreprocessor(ValuePreprocessor):
             raise ValueError("Preprocessor must be fitted before encoding. Call fit() first.")
         
         if self._match(code):
-            print(f"--- DEBUG: Encoding code='{code}', value='{value}' ---")
+            # print(f"--- DEBUG: Encoding code='{code}', value='{value}' ---")
             if code not in self.fits:
-                print(f"  - WARNING: Code '{code}' matched but no bins were fitted. Returning raw value.")
+                # print(f"  - WARNING: Code '{code}' matched but no bins were fitted. Returning raw value.")
                 # This is a code matches the criteria but was not present in the training data.
                 # In this case we return the value as is without any encoding.
                 return value
@@ -69,7 +69,7 @@ class QuantileBinPreprocessor(ValuePreprocessor):
                 # map bin indices to bin labels
                 bin_label = f"Q{bin_index}"
 
-                print(f"  - SUCCESS: Binned value into '{bin_label}'")
+                # print(f"  - SUCCESS: Binned value into '{bin_label}'")
 
                 # return the bin labels
                 return bin_label
