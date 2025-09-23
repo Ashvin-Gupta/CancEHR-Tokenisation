@@ -69,20 +69,27 @@ preprocessing:
     # Then, bin the BMI codes
     - type: "quantile_bin"
       matching_type: "equals"
-      matching_value: "bmi"
+      matching_value: "MEDICAL//bmi"
       value_column: "numeric_value"
       k: 10 # 10 quantile bins
     
     - type: "quantile_bin"
       matching_type: "equals"
-      matching_value: "height"
+      matching_value: "MEDICAL//height"
       value_column: "numeric_value" 
       k: 10 # 10 quantile bins
     
     - type: "quantile_bin"
       matching_type: "equals"
-      matching_value: "weight"
+      matching_value: "MEDICAL//weight"
       value_column: "numeric_value" 
+      k: 10 # 10 quantile bins
+    
+    # Bin any remaining measurement codes
+    - type: "quantile_bin"
+      matching_type: "starts_with"
+      matching_value: "MEASUREMENT//"
+      value_column: "numeric_value"
       k: 10 # 10 quantile bins
 
 # 3. Add time intervals after tokenization

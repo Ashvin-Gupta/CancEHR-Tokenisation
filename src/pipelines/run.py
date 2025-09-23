@@ -61,17 +61,17 @@ def run_pipeline(config: dict, run_name: str, overwrite: bool = False):
     preprocessors = []
     if "preprocessing" in config:
         for preprocessing_config in config["preprocessing"]:
-            if preprocessing_config["type"] == "quantile_bin":
+            if preprocessing_config["type"] == "code_truncation":
+                preprocessor = CodeTruncationPreprocessor(
+                    matching_type=preprocessing_config["matching_type"],
+                    matching_value=preprocessing_config["matching_value"],
+                )
+            elif preprocessing_config["type"] == "quantile_bin":
                 preprocessor = QuantileBinPreprocessor(
                     matching_type=preprocessing_config["matching_type"],
                     matching_value=preprocessing_config["matching_value"],
                     k=preprocessing_config["k"],
                     value_column=preprocessing_config["value_column"]
-                )
-            elif preprocessing_config["type"] == "code_truncation":
-                preprocessor = CodeTruncationPreprocessor(
-                    matching_type=preprocessing_config["matching_type"],
-                    matching_value=preprocessing_config["matching_value"],
                 )
             elif preprocessing_config["type"] == "code_enrichment":
                 preprocessor = CodeEnrichmentPreprocessor(
