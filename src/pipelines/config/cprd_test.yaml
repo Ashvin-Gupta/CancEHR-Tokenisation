@@ -58,7 +58,6 @@ preprocessing:
         code_template: "DEMOGRAPHICS//REGION"
         value_prefix: "REGION//"
         insert_code: False
-        
     # Next, bin the LAB codes
     - type: "quantile_bin"
       matching_type: "starts_with"
@@ -103,6 +102,30 @@ preprocessing:
       matching_value: "MEASUREMENT//"
       value_column: "numeric_value"
       k: 10 # 10 quantile bins
+    
+    - type: "demographics_aggregation"
+      measurements:
+      - token_pattern: "MEDICAL//bmi"
+        value_column: "numeric_value"
+        aggregation: "median"
+        num_bins: 10
+        token_prefix: "MEDICAL//BMI"
+        insert_code: True
+        remove_original_tokens: True
+      - token_pattern: "MEDICAL//height"
+        value_column: "numeric_value"
+        aggregation: "median"
+        num_bins: 10
+        token_prefix: "MEDICAL//HEIGHT"
+        insert_code: True
+        remove_original_tokens: True
+      - token_pattern: "MEDICAL//weight"
+        value_column: "numeric_value"
+        aggregation: "median"
+        num_bins: 10
+        token_prefix: "MEDICAL//WEIGHT"
+        insert_code: True
+        remove_original_tokens: True
 
 # 3. Add time intervals after tokenization
 postprocessing:
