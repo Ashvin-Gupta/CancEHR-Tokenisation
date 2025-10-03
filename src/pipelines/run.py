@@ -61,6 +61,8 @@ def run_pipeline(config: dict, run_name: str, overwrite: bool = False):
     preprocessors = []
     if "preprocessing" in config:
         for preprocessing_config in config["preprocessing"]:
+            print('--------------------------------')
+            print(preprocessing_config['type'])
             if preprocessing_config["type"] == "code_truncation":
                 preprocessor = CodeTruncationPreprocessor(
                     matching_type=preprocessing_config["matching_type"],
