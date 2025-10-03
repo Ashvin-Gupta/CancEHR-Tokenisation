@@ -121,7 +121,7 @@ class DemographicAggregationPreprocessor(BasePreprocessor):
             Optional[float]: Aggregated value or None if no valid measurements found
         """
         # Find matching measurement tokens
-        matching_events = subject_events.filter(pl.col("code") == measurement["token_pattern"])
+        matching_events = subject_events.filter(pl.col("code").str.starts_with(measurement["token_pattern"]))
         
         if matching_events.is_empty():
             return None
