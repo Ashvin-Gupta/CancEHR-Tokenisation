@@ -136,7 +136,7 @@ preprocessing:
     - type: "code_enrichment"
       matching_type: "starts_with"
       matching_value: "MEDICAL//"
-      lookup_file: "/data/home/qc25022/cancer-extraction-pipeline/src/resources/MedcialDictTranslation.csv"
+      lookup_file: "/data/home/qc25022/cancer-extraction-pipeline/src/resources/MedicalDictTranslation.csv"
       template: "<MEDICAL> {term}"
       code_column: "code"
     - type: "code_enrichment"
