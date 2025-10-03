@@ -103,7 +103,7 @@ preprocessing:
       value_column: "numeric_value"
       k: 10 # 10 quantile bins
     
-    - type: "demographics_aggregation"
+    - type: "demographic_aggregation"
       measurements:
       - token_pattern: "MEDICAL//bmi"
         value_column: "numeric_value"
