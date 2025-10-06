@@ -26,6 +26,6 @@ cd "${BASE_DIR}"
 
 echo "Starting narrative pipeline from directory: $(pwd)"
 python -m src.narrative.run \
-    --config_filepath "${CONFIG_FILE}" \
+    --config_filepath "${CONFIG_FILE}" 
 echo "Narrative pipeline finished."
 deactivate
