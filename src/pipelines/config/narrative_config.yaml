@@ -1,6 +1,6 @@
 # Paths to the input data from your first pipeline
-tokenized_data_dir: "/data/scratch/qc25022/liver/tokenised_data/train/"
-vocab_file: "/data/scratch/qc25022/liver/tokenised_data/vocab.csv"
+tokenized_data_dir: "/data/scratch/qc25022/liver/tokenised_data/cprd_test/train/"
+vocab_file: "/data/scratch/qc25022/liver/tokenised_data/cprd_test/vocab.csv"
 
 # Paths to your lookup tables for translation
 medical_lookup_file: "/data/home/qc25022/cancer-extraction-pipeline/src/resources/MedicalDictTranslation.csv"
