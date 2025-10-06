@@ -58,17 +58,17 @@ class NarrativeGenerator:
 
         if token_string.startswith('<time_interval_'):
             time_part = token_string.split('_')[-1].strip('>')
-            return f"Time since last event: {time_part}."
+            return f"{time_part}."
         
         elif token_string.startswith('MEDICAL//'):
             code = token_string.split('//')[1].upper()
             description = self.medical_lookup.get(code, code.replace('_', ' ').title())
-            return f"Event: {description}."
+            return f"{description}."
             
         elif token_string.startswith('LAB//'):
             code = token_string.split('//')[1].upper()
             description = self.lab_lookup.get(code, code.replace('_', ' ').title())
-            return f"Lab test: {description}."
+            return f"Lab {description}."
 
         elif token_string.startswith(('BMI//', 'HEIGHT//', 'WEIGHT//')):
             parts = token_string.split('//')
@@ -79,14 +79,14 @@ class NarrativeGenerator:
             return f"{parts[0].title()}: {parts[1]}."
 
         elif token_string.startswith('Q') and len(token_string) <= 4 and token_string[1:].isdigit():
-            return f"(Value in quantile: {token_string})."
+            return f"quantile{token_string[1:]}."
 
         elif token_string in ['<start>', '<end>', '<unknown>', 'MEDS_BIRTH']:
             return ""
             
         else:
             # Default case for any other tokens (like raw numbers that weren't binned)
-            return f"Value: {token_string}."
+            return f"{token_string}."
 
     def generate(self):
         """

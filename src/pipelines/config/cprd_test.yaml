@@ -128,6 +128,14 @@ preprocessing:
       value_column: "numeric_value"
       k: 10 # 10 quantile bins
     
+    # Insert Age
+    - type: "ethos_quantile_age"
+      num_quantiles:10
+      prefix: "AGE_"
+      insert_t1_code: False
+      insert_t2_code: False
+      keep_meds_birth: True
+    
 
 # 3. Add time intervals after tokenization
 postprocessing:
