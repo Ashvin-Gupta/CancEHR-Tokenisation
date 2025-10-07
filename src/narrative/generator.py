@@ -2,6 +2,7 @@ import pandas as pd
 import pickle
 import os
 from tqdm import tqdm
+import json
 
 class NarrativeGenerator:
     """
