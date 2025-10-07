@@ -14,7 +14,7 @@ from src.preprocessing import QuantileBinPreprocessor, CodeEnrichmentPreprocesso
 from src.preprocessing.code_truncation import CodeTruncationPreprocessor
 from src.postprocessing import TimeIntervalPostprocessor, DemographicSortOrderPostprocessor
 from src.preprocessing.utils import fit_preprocessors_jointly
-from src.preprocessing.simple_age import SimpleAgePreprocessor
+from src.preprocessing.decimal_age import DecimalAgePreprocessor
 
 DATASET_DIRS = ["train", "tuning", "held_out"]
 
@@ -103,8 +103,8 @@ def run_pipeline(config: dict, run_name: str, overwrite: bool = False):
                     insert_t2_code=preprocessing_config.get("insert_t2_code", True),
                     keep_meds_birth=preprocessing_config.get("keep_meds_birth", False)
                 )
-            elif preprocessing_config["type"] == "simple_age":
-                preprocessor = SimpleAgePreprocessor(
+            elif preprocessing_config["type"] == "decimal_age":
+                preprocessor = DecimalAgePreprocessor(
                     keep_meds_birth=preprocessing_config.get("keep_meds_birth", False)
                 )
             elif preprocessing_config["type"] == "demographic_aggregation":
