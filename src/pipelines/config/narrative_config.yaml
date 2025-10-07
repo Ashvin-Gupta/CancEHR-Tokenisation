@@ -10,4 +10,4 @@ lab_lookup_file: "/data/home/qc25022/CancEHR-Tokenisation/src/resources/LabLookU
 labels_file: "/data/home/qc25022/cancer-extraction-pipeline/output/liver_study/subject_information.csv"
 
 # Path for the final output file
-output_txt_file: "/data/scratch/qc25022/liver/finetuning_dataset.txt"
+output_txt_file: "/data/scratch/qc25022/liver/finetuning_dataset.jsonl"

@@ -95,7 +95,7 @@ class NarrativeGenerator:
             
         else:
             # Default case for any other tokens (like raw numbers that weren't binned)
-            return f"{token_string}."
+            return f"Unknown"
 
     def generate(self):
         """
