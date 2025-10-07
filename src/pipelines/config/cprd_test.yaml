@@ -129,12 +129,8 @@ preprocessing:
       k: 10 # 10 quantile bins
     
     # Insert Age
-    - type: "ethos_quantile_age"
-      num_quantiles: 10
-      prefix: "AGE_"
-      insert_t1_code: True
-      insert_t2_code: True
-      keep_meds_birth: False
+    - type: "decimal_age"
+      keep_meds_birth: True
     
 
 # 3. Add time intervals after tokenization
