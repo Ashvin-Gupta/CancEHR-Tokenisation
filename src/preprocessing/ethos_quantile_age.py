@@ -206,11 +206,11 @@ class EthosQuantileAgePreprocessor(BasePreprocessor):
             
             # Create age_t1 event
             if self.insert_t1_code:
-                t1_code = f"{self.prefix}T1"
+                t1_code = f"{self.prefix}decile"
                 t1_value = age_t1_token
             else:
                 t1_code = "STATIC_DATA_NO_CODE"
-                t1_value = f"{self.prefix}T1//{age_t1_token}" if self.prefix else f"T1//{age_t1_token}"
+                t1_value = f"{self.prefix}decile//{age_t1_token}" if self.prefix else f"decile//{age_t1_token}"
             
             age_t1_event = base_event.copy()
             age_t1_event["code"] = t1_code
@@ -220,11 +220,11 @@ class EthosQuantileAgePreprocessor(BasePreprocessor):
             
             # Create age_t2 event  
             if self.insert_t2_code:
-                t2_code = f"{self.prefix}T2"
+                t2_code = f"{self.prefix}unit"
                 t2_value = age_t2_token
             else:
                 t2_code = "STATIC_DATA_NO_CODE"
-                t2_value = f"{self.prefix}T2//{age_t2_token}" if self.prefix else f"T2//{age_t2_token}"
+                t2_value = f"{self.prefix}unit//{age_t2_token}" if self.prefix else f"unit//{age_t2_token}"
             
             age_t2_event = base_event.copy()
             age_t2_event["code"] = t2_code
