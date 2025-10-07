@@ -30,7 +30,7 @@ class SimpleAgePreprocessor(BasePreprocessor):
         if birth_events.is_empty():
             return 0.0
         
-        birth_time = birth_events["time"].item()
+        birth_time = birth_events["time"].to_list()[0]
         if birth_time is None:
             return 0.0
 
