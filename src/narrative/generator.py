@@ -68,7 +68,12 @@ class NarrativeGenerator:
             code = token_string.split('//')[1].upper()
             description = self.medical_lookup.get(code, code.replace('_', ' ').title())
             return f"{description}"
-            
+        
+        elif token_string.startswith('MEASUREMENT//'):
+            code = token_string.split('//')[1].upper()
+            description = self.quartile_lookup.get(code, code.replace('_', ' ').title())
+            return f"{description}"
+        
         elif token_string.startswith('LAB//'):
             code = token_string.split('//')[1].upper()
             description = self.lab_lookup.get(code, code.replace('_', ' ').title())
