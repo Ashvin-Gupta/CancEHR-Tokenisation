@@ -39,7 +39,10 @@ class NarrativeGenerator:
         # Load the patient cancer labels
         labels_df = pd.read_csv(self.config['labels_file'])
         self.subject_to_label_map = pd.Series(labels_df['site'].values, index=labels_df['subject_id']).to_dict()
-        
+
+        # Convert the 'site' column to a binary label (1 for cancer, 0 for control)
+        labels_df['label'] = labels_df['site'].apply(lambda x: 1 if x.lower() == 'liver' else 0)
+        self.subject_to_label_map = pd.Series(labels_df['label'].values, index=labels_df['subject_id']).to_dict()
         
         print("Mappings loaded successfully.")
 
@@ -58,17 +61,17 @@ class NarrativeGenerator:
 
         if token_string.startswith('<time_interval_'):
             time_part = token_string.split('_')[-1].strip('>')
-            return f"{time_part}."
+            return f"{time_part}"
         
         elif token_string.startswith('MEDICAL//'):
             code = token_string.split('//')[1].upper()
             description = self.medical_lookup.get(code, code.replace('_', ' ').title())
-            return f"{description}."
+            return f"{description}"
             
         elif token_string.startswith('LAB//'):
             code = token_string.split('//')[1].upper()
             description = self.lab_lookup.get(code, code.replace('_', ' ').title())
-            return f"Lab {description}."
+            return f"Lab {description}"
 
         elif token_string.startswith(('BMI//', 'HEIGHT//', 'WEIGHT//')):
             parts = token_string.split('//')
@@ -76,10 +79,15 @@ class NarrativeGenerator:
 
         elif token_string.startswith(('GENDER//', 'ETHNICITY//', 'REGION//')):
             parts = token_string.split('//')
-            return f"{parts[0].title()}: {parts[1]}."
+            # return f"{parts[0].title()}: {parts[1]}."
+            return f"{parts[1]}"
+        
+        elif token_string.startswith('REGION//'):
+            parts = token_string.split('//')
+            return f"{parts[0].title()}: {parts[1]}"
 
         elif token_string.startswith('Q') and len(token_string) <= 4 and token_string[1:].isdigit():
-            return f"quantile{token_string[1:]}."
+            return f"{token_string[1:]}."
 
         elif token_string in ['<start>', '<end>', '<unknown>', 'MEDS_BIRTH']:
             return ""
@@ -97,6 +105,8 @@ class NarrativeGenerator:
         output_txt_file = self.config['output_txt_file']
         
         print(f"Starting narrative generation from data in: {tokenized_data_dir}")
+
+        SIX_MONTHS_IN_SECONDS = 6 * 30.44 * 24 * 60 * 60
         
         with open(output_txt_file, 'w') as f_out:
             pkl_files = [os.path.join(tokenized_data_dir, f) for f in os.listdir(tokenized_data_dir) if f.endswith('.pkl')]
@@ -112,6 +122,26 @@ class NarrativeGenerator:
                     for patient in patient_data_list:
                         subject_id = patient['subject_id']
                         token_ids = patient['tokens']
+                        timestamps = patient['timestamps']
+                        
+                        label = self.subject_to_label_map.get(subject_id)
+                        if label is None:
+                            continue 
+
+                        if label == 1: # If this is a cancer case
+                            # Find the last valid timestamp in the trajectory
+                            last_timestamp = max(t for t in timestamps if t is not None and t > 0)
+                            
+                            if last_timestamp:
+                                cutoff_timestamp = last_timestamp - SIX_MONTHS_IN_SECONDS
+                                
+                                # Filter tokens and timestamps to keep only events before the cutoff
+                                truncated_token_ids = []
+                                for i, ts in enumerate(timestamps):
+                                    # Keep static events (ts=0) and events before the cutoff
+                                    if ts == 0 or ts < cutoff_timestamp:
+                                        truncated_token_ids.append(token_ids[i])
+                                token_ids = truncated_token_ids
                         
                         string_codes = [self.id_to_token_map.get(tid, "") for tid in token_ids]
                         
@@ -121,10 +151,13 @@ class NarrativeGenerator:
                         
                         narrative = " ".join(final_phrases)
                         
-                        label = self.subject_to_label_map.get(subject_id, "NO_CANCER")
+                        # Create the JSON object for this patient
+                        json_line = {
+                            "text": narrative,
+                            "label": label
+                        }
                         
-                        final_line = f"<|startoftext|> PATIENT HISTORY: {narrative} FINAL DIAGNOSIS: {label} <|endoftext|>\n"
-                        
-                        f_out.write(final_line)
+                        # Write the JSON object as a new line in the output file
+                        f_out.write(json.dumps(json_line) + '\n')
 
         print(f"\n✅ Narrative generation complete. Dataset saved to: {output_txt_file}")
