@@ -48,7 +48,7 @@ class SimpleAgePreprocessor(BasePreprocessor):
         if real_events.is_empty():
             return 0.0
 
-        first_medical_time = real_events["time"].item()
+        first_medical_time = real_events["time"].to_list()[0]
         if first_medical_time is None:
             return 0.0
             
