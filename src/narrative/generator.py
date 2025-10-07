@@ -77,7 +77,7 @@ class NarrativeGenerator:
             parts = token_string.split('//')
             return f"{parts[0]}: {parts[1]}."
 
-        elif token_string.startswith(('GENDER//', 'ETHNICITY//', 'REGION//')):
+        elif token_string.startswith(('GENDER//', 'ETHNICITY//')):
             parts = token_string.split('//')
             # return f"{parts[0].title()}: {parts[1]}."
             return f"{parts[1]}"
@@ -87,7 +87,7 @@ class NarrativeGenerator:
             return f"{parts[0].title()}: {parts[1]}"
 
         elif token_string.startswith('Q') and len(token_string) <= 4 and token_string[1:].isdigit():
-            return f"{token_string[1:]}."
+            return f"{token_string[1:]}"
 
         elif token_string in ['<start>', '<end>', '<unknown>', 'MEDS_BIRTH']:
             return ""
