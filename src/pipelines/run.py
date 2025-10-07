@@ -102,6 +102,10 @@ def run_pipeline(config: dict, run_name: str, overwrite: bool = False):
                     insert_t2_code=preprocessing_config.get("insert_t2_code", True),
                     keep_meds_birth=preprocessing_config.get("keep_meds_birth", False)
                 )
+            elif preprocessing_config["type"] == "simple_age":
+                preprocessor = SimpleAgePreprocessor(
+                    keep_meds_birth=preprocessing_config.get("keep_meds_birth", False)
+                )
             elif preprocessing_config["type"] == "demographic_aggregation":
                 preprocessor = DemographicAggregationPreprocessor(
                     matching_type="",  # Not used for demographic aggregation

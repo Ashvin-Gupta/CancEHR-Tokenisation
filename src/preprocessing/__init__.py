@@ -4,6 +4,7 @@ from .load_static_data import LoadStaticDataPreprocessor
 from .ethos_quantile_age import EthosQuantileAgePreprocessor
 from .demographic_aggregation import DemographicAggregationPreprocessor
 from .base import BasePreprocessor, ValuePreprocessor, CodePreprocessor
+from .simple_age import SimpleAgePreprocessor
 
 # Backward compatibility alias
 Preprocessor = ValuePreprocessor
@@ -17,5 +18,6 @@ __all__ = [
     "BasePreprocessor", 
     "ValuePreprocessor", 
     "CodePreprocessor", 
-    "Preprocessor"
+    "Preprocessor",
+    "SimpleAgePreprocessor"
 ]
