@@ -14,6 +14,7 @@ from src.preprocessing import QuantileBinPreprocessor, CodeEnrichmentPreprocesso
 from src.preprocessing.code_truncation import CodeTruncationPreprocessor
 from src.postprocessing import TimeIntervalPostprocessor, DemographicSortOrderPostprocessor
 from src.preprocessing.utils import fit_preprocessors_jointly
+from src.preprocessing.simple_age import SimpleAgePreprocessor
 
 DATASET_DIRS = ["train", "tuning", "held_out"]
 
