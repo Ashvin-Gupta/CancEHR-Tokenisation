@@ -130,7 +130,7 @@ preprocessing:
     
     # Insert Age
     - type: "ethos_quantile_age"
-      num_quantiles:10
+      num_quantiles: 10
       prefix: "AGE_"
       insert_t1_code: False
       insert_t2_code: False
