@@ -92,29 +92,12 @@ class DemographicSortOrderPostprocessor(Postprocessor):
             else:
                 regular_events.append(event)
         
-        # --- START OF DEBUGGING CODE ---
-        # Print the tokens before sorting to see their original order
-        if demographic_events: # Only print if there are demographic events to sort
-            print("\n--- DEBUG: Sorting Demographics ---")
-            print(f"Subject ID: {datapoint.get('subject_id')}")
-            before_sort_tokens = [event.get('text_value') or event.get('code') for event in demographic_events]
-            print(f"  Before sorting: {before_sort_tokens}")
-        # --- END OF DEBUGGING CODE ---
-        
         # Sort demographic events by priority
         demographic_events.sort(key=lambda event: (
             self._get_token_priority(event),  # Primary: demographic priority
             event.get("text_value") or "",      # Secondary: alphabetical for same priority
             event.get("code") or ""             # Tertiary: code for tie-breaking
         ))
-
-        # --- START OF DEBUGGING CODE ---
-        # Print the tokens after sorting to confirm the new order
-        if demographic_events:
-            after_sort_tokens = [event.get('text_value') or event.get('code') for event in demographic_events]
-            print(f"  After sorting:  {after_sort_tokens}")
-            print("---------------------------------")
-        # --- END OF DEBUGGING CODE ---
         
         # Combine sorted demographic events with regular events
         sorted_event_list = demographic_events + regular_events
