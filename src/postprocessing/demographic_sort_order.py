@@ -95,8 +95,8 @@ class DemographicSortOrderPostprocessor(Postprocessor):
         # Sort demographic events by priority
         demographic_events.sort(key=lambda event: (
             self._get_token_priority(event),  # Primary: demographic priority
-            event.get("text_value", ""),      # Secondary: alphabetical for same priority
-            event.get("code", "")             # Tertiary: code for tie-breaking
+            event.get("text_value") or "",      # Secondary: alphabetical for same priority
+            event.get("code") or ""             # Tertiary: code for tie-breaking
         ))
         
         # Combine sorted demographic events with regular events
