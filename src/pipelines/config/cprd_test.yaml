@@ -4,9 +4,9 @@ name: "cprd_custom_tokenization_pipeline"
 
 # 1. Point to your data and define where to save the output
 data:
-    path: "/data/scratch/qc25022/pancreas/final_cleaned_events" 
+    path: "/data/scratch/qc25022/liver/final_cleaned_debug" 
 
-save_path: "/data/scratch/qc25022/pancreas/tokenised_data" 
+save_path: "/data/scratch/qc25022/liver/tokenised_data" 
 
 # 2. Define the preprocessing steps in order
 preprocessing:
@@ -19,7 +19,7 @@ preprocessing:
     - type: "load_static_data"
       # matching_type: "equals"
       # matching_value: "MEDS_BIRTH"
-      csv_filepath: "/data/home/qc25022/cancer-extraction-pipeline/output/pancreas_study/subject_information.csv"
+      csv_filepath: "/data/home/qc25022/cancer-extraction-pipeline/output/liver_study/subject_information.csv"
       subject_id_column: "subject_id"
       columns:
       # Gender
@@ -154,6 +154,15 @@ postprocessing:
         "18mt-24mt": {min: 604800, max: 691200}
         "24mt-60mt": {min: 691200, max: 1555200}
         "60mt-": {min: 1555200}
+
+    - type: "demographic_sort_order"
+      token_patterns:
+        - "AGE_decile"
+        - "AGE_unit"
+        - "GENDER//"
+        - "ETHNICITY//"
+        - "REGION//"
+        - "MEDICAL//BMI"
         
 
 # 4. Define the tokenizer settings
