@@ -61,6 +61,11 @@ class NarrativeGenerator:
         labels_df['label_id'] = labels_df['string_label'].map(self.label_to_id_map)
         self.subject_to_label_map = pd.Series(labels_df['label_id'].values, index=labels_df['subject_id']).to_dict()
         
+        # Step 4: Add cancer date to the mapping
+        labels_df['cancerdate'] = pd.to_datetime(labels_df['cancerdate'], errors='coerce')
+        self.subject_to_cancer_date_map = pd.Series(labels_df['cancerdate'].values, index=labels_df['subject_id']).to_dict()
+        # self.subject_to_cancer_date_map = {k: v.strftime('%Y-%m-%d') if pd.notna(v) else None for k, v in self.subject_to_cancer_date_map.items()}
+
         print("Mappings loaded successfully.")
 
     def _translate_token(self, token_string: str) -> str:
@@ -170,7 +175,10 @@ class NarrativeGenerator:
                             json_line = {
                                 "subject_id": subject_id,
                                 "text": narrative,
-                                "label": int(label)
+                                "label": int(label),
+                                "timestamps": patient['timestamps'],
+                                "cancer_date": cancer_date.isoformat() if pd.notna(cancer_date) else None
+                                # "cancer_date": self.subject_to_cancer_date_map.get(subject_id, None)
                             }
                             
                             f_out.write(json.dumps(json_line) + '\n')
