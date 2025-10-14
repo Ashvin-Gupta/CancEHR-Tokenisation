@@ -54,12 +54,12 @@ class TimeIntervalPostprocessor(Postprocessor):
             # Find the last event with a non-None timestamp
             last_timestamp = None
             for prev_event in reversed(new_event_list):
-                if prev_event["timestamp"] is not None:
+                if prev_event["timestamp"] is not None and prev_event["code"] != "MEDS_BIRTH":
                     last_timestamp = prev_event["timestamp"]
                     break
             
             # If we found a previous timestamp, calculate time difference
-            if last_timestamp is not None and last_timestamp > 0:
+            if last_timestamp is not None:
                 time_delta = current_timestamp - last_timestamp
                 
                 # Check if time delta matches any interval
