@@ -7,11 +7,11 @@ from tqdm import tqdm
 
 # 1. Path to the directory containing your RAW .parquet files (the input to the pipeline)
 #    This should be the same as the 'data.path' in your YAML config.
-RAW_DATA_DIR = "/data/scratch/qc25022/liver/final_cleaned_debug/tuning/"
+RAW_DATA_DIR = "/data/scratch/qc25022/pancreas/final_cleaned_events/train/"
 
 # 2. Path to the directory containing your final TOKENIZED .pkl files
 #    This is the output directory from your tokenization run.
-TOKENIZED_DATA_DIR = "/data/scratch/qc25022/liver/tokenised_data/cprd_test/tuning/"
+TOKENIZED_DATA_DIR = "/data/scratch/qc25022/pancreas/tokenised_data/cprd_test/train/"
 
 # --- VALIDATION SCRIPT ---
 
