@@ -1,13 +1,13 @@
 # Paths to the input data from your first pipeline
-tokenized_data_dir: "/data/scratch/qc25022/liver/tokenised_data/cprd_test/train/"
-vocab_file: "/data/scratch/qc25022/liver/tokenised_data/cprd_test/vocab.csv"
+tokenized_data_root: "/data/scratch/qc25022/upgi/tokenised_data_debug/cprd_test/"
+vocab_file: "/data/scratch/qc25022/upgi/tokenised_data_debug/cprd_test/vocab.csv"
 
 # Paths to your lookup tables for translation
 medical_lookup_file: "/data/home/qc25022/CancEHR-Tokenisation/src/resources/MedicalDictTranslation.csv"
 lab_lookup_file: "/data/home/qc25022/CancEHR-Tokenisation/src/resources/LabLookUP.csv"
 
 # Path to your patient labels
-labels_file: "/data/home/qc25022/cancer-extraction-pipeline/output/liver_study/subject_information.csv"
+labels_file: "/data/scratch/qc25022/upgi/master_subject_labels.csv"
 
 # Path for the final output file
-output_txt_file: "/data/scratch/qc25022/liver/finetuning_dataset.jsonl"
+output_narrative_dir: "/data/scratch/qc25022/upgi/narratives/"
