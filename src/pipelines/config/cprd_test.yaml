@@ -4,9 +4,9 @@ name: "cprd_custom_tokenization_pipeline"
 
 # 1. Point to your data and define where to save the output
 data:
-    path: "/data/scratch/qc25022/pancreas/final_cleaned_events" 
+    path: "/data/scratch/qc25022/upgi/event_stream_debug" 
 
-save_path: "/data/scratch/qc25022/pancreas/tokenised_data" 
+save_path: "/data/scratch/qc25022/upgi/tokenised_data_debug" 
 
 # 2. Define the preprocessing steps in order
 preprocessing:
@@ -19,7 +19,7 @@ preprocessing:
     - type: "load_static_data"
       # matching_type: "equals"
       # matching_value: "MEDS_BIRTH"
-      csv_filepath: "/data/home/qc25022/cancer-extraction-pipeline/output/pancreas_study/subject_information.csv"
+      csv_filepath: "/data/scratch/qc25022/upgi/subject_information.csv"
       subject_id_column: "subject_id"
       columns:
       # Gender
