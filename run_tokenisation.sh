@@ -25,10 +25,10 @@ RUN_NAME="cprd_test"
 cd "${BASE_DIR}"
 
 echo "Starting tokenization pipeline from directory: $(pwd)"
-python src/resources/validate_subjects.py
-#python -m src.pipelines.run \
-#    	--config_filepath "${CONFIG_FILE}" \
-#    --run_name "${RUN_NAME}" \
-#    --overwrite
+#python src/resources/validate_subjects.py
+python -m src.pipelines.run \
+	--config_filepath "${CONFIG_FILE}" \
+    	--run_name "${RUN_NAME}" \
+    	--overwrite
 echo "Pipeline finished."
 deactivate
