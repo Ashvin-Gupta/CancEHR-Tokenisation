@@ -163,6 +163,7 @@ class NarrativeGenerator:
                             subject_id = patient['subject_id']
                             
                             label = self.subject_to_label_map.get(subject_id)
+                            cancer_date = self.subject_to_cancer_date_map.get(subject_id)
                             if pd.isna(label):
                                 continue
                             
