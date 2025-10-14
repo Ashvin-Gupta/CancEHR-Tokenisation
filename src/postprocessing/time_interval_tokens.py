@@ -59,7 +59,7 @@ class TimeIntervalPostprocessor(Postprocessor):
                     break
             
             # If we found a previous timestamp, calculate time difference
-            if last_timestamp is not None:
+            if last_timestamp is not None and last_timestamp > 0:
                 time_delta = current_timestamp - last_timestamp
                 
                 # Check if time delta matches any interval

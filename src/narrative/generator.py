@@ -80,6 +80,9 @@ class NarrativeGenerator:
             time_part = token_string.split('_')[-1].strip('>')
             return f"{time_part}"
         
+        elif token_string.startswith('AGE_'):
+            return f"{token_string}"
+        
         elif token_string.startswith('MEDICAL//'):
             code = token_string.split('//')[1].upper()
             description = self.medical_lookup.get(code, code.replace('_', ' ').title())
@@ -162,7 +165,7 @@ class NarrativeGenerator:
                             string_codes = [self.id_to_token_map.get(tid, "") for tid in token_ids]
                             translated_phrases = [self._translate_token(code) for code in string_codes]
                             final_phrases = [phrase for phrase in translated_phrases if phrase]
-                            narrative = " ".join(final_phrases)
+                            narrative = ", ".join(final_phrases)
                             
                             json_line = {
                                 "subject_id": subject_id,
