@@ -4,9 +4,9 @@ name: "cprd_custom_tokenization_pipeline"
 
 # 1. Point to your data and define where to save the output
 data:
-    path: "/data/scratch/qc25022/upgi/event_stream" 
+    path: "/data/scratch/qc25022/gallbladder/final_cleaned_events" 
 
-save_path: "/data/scratch/qc25022/upgi/tokenised_data" 
+save_path: "/data/scratch/qc25022/gallbladder/tokenised_data" 
 
 # 2. Define the preprocessing steps in order
 preprocessing:
@@ -19,7 +19,7 @@ preprocessing:
     - type: "load_static_data"
       # matching_type: "equals"
       # matching_value: "MEDS_BIRTH"
-      csv_filepath: "/data/scratch/qc25022/upgi/master_subject_labels.csv"
+      csv_filepath: "/data/scratch/qc25022/gallbladder/master_subject_labels.csv"
       subject_id_column: "subject_id"
       columns:
       # Gender
@@ -38,20 +38,20 @@ preprocessing:
         insert_code: False
         valid_values: ["WHITE", "BLACK", "ASIAN", "MIXED", "OTHER"]
         mappings:
-          "WHITE": "WHITE"
-          "INDIAN": "ASIAN"
-          "BL CARIB": "BLACK"
-          "OTHER": "OTHER"
-          "OTH ASIAN": "ASIAN"
-          "BL AFRIC": "BLACK"
-          "PAKISTANI": "ASIAN"
-          "MIXED": "MIXED"
-          "ASIAN OR BRITISH_ASIAN": "ASIAN"
-          "BL OTHER": "BLACK"
-          "CHINESE": "ASIAN"
-          "BLACK OR BLACK BRITISH": "BLACK"
-          "BANGLADESHI": "ASIAN"
-          "UNKNOWN": "OTHER"
+          "WHITE": "Ethnicity WHITE"
+          "INDIAN": "Ethnicity ASIAN"
+          "BL CARIB": "Ethnicity BLACK"
+          "OTHER": "Ethnicity OTHER"
+          "OTH ASIAN": "Ethnicity ASIAN"
+          "BL AFRIC": "Ethnicity BLACK"
+          "PAKISTANI": "Ethnicity ASIAN"
+          "MIXED": "Ethnicity MIXED"
+          "ASIAN OR BRITISH_ASIAN": "Ethnicity ASIAN"
+          "BL OTHER": "Ethnicity BLACK"
+          "CHINESE": "Ethnicity ASIAN"
+          "BLACK OR BLACK BRITISH": "Ethnicity BLACK"
+          "BANGLADESHI": "Ethnicity ASIAN"
+          "UNKNOWN": "Ethnicity OTHER"
       
       # Region 
       - column_name: "region"
@@ -82,55 +82,94 @@ preprocessing:
         token_prefix: "MEDICAL//WEIGHT"
         insert_code: True
         remove_original_tokens: True
-        
-    # Next, bin the LAB codes
-    - type: "quantile_bin"
+      
+    - type: "quantile_bin_3level"
       matching_type: "starts_with"
       matching_value: "LAB//"
-      value_column: "numeric_value" # Assuming LAB values are in this column
-      k: 10 # 10 quantile bins
-
-    # Then, bin the BMI codes
-    - type: "quantile_bin"
-      matching_type: "equals"
+      value_column: "numeric_value"
+    
+    - type: "quantile_bin_3level"
+      matching_type: "starts_with"
       matching_value: "MEDICAL//bmi"
       value_column: "numeric_value"
-      k: 10 # 10 quantile bins
     
-    - type: "quantile_bin"
-      matching_type: "equals"
+    - type: "quantile_bin_3level"
+      matching_type: "starts_with"
       matching_value: "MEDICAL//height"
-      value_column: "numeric_value" 
-      k: 10 # 10 quantile bins
+      value_column: "numeric_value"
     
-    - type: "quantile_bin"
-      matching_type: "equals"
+    - type: "quantile_bin_3level"
+      matching_type: "starts_with"
       matching_value: "MEDICAL//weight"
       value_column: "numeric_value" 
-      k: 10 # 10 quantile bins
     
-    - type: "quantile_bin"
-      matching_type: "equals"
+    - type: "quantile_bin_3level"
+      matching_type: "starts_with"
       matching_value: "MEDICAL//bp_diastolic"
-      value_column: "numeric_value" 
-      k: 10 # 10 quantile bins
+      value_column: "numeric_value"
     
-    - type: "quantile_bin"
-      matching_type: "equals"
+    - type: "quantile_bin_3level"
+      matching_type: "starts_with"
       matching_value: "MEDICAL//bp_systolic"
-      value_column: "numeric_value" 
-      k: 10 # 10 quantile bins
+      value_column: "numeric_value"
     
-    # Bin any remaining measurement codes
-    - type: "quantile_bin"
+    - type: "quantile_bin_3level"
       matching_type: "starts_with"
       matching_value: "MEASUREMENT//"
       value_column: "numeric_value"
-      k: 10 # 10 quantile bins
     
     # Insert Age
-    - type: "decimal_age"
+    - type: "binned_age"
       keep_meds_birth: True
+
+    # # Next, bin the LAB codes
+    # - type: "quantile_bin"
+    #   matching_type: "starts_with"
+    #   matching_value: "LAB//"
+    #   value_column: "numeric_value" # Assuming LAB values are in this column
+    #   k: 10 # 10 quantile bins
+
+    # # Then, bin the BMI codes
+    # - type: "quantile_bin"
+    #   matching_type: "equals"
+    #   matching_value: "MEDICAL//bmi"
+    #   value_column: "numeric_value"
+    #   k: 10 # 10 quantile bins
+    
+    # - type: "quantile_bin"
+    #   matching_type: "equals"
+    #   matching_value: "MEDICAL//height"
+    #   value_column: "numeric_value" 
+    #   k: 10 # 10 quantile bins
+    
+    # - type: "quantile_bin"
+    #   matching_type: "equals"
+    #   matching_value: "MEDICAL//weight"
+    #   value_column: "numeric_value" 
+    #   k: 10 # 10 quantile bins
+    
+    # - type: "quantile_bin"
+    #   matching_type: "equals"
+    #   matching_value: "MEDICAL//bp_diastolic"
+    #   value_column: "numeric_value" 
+    #   k: 10 # 10 quantile bins
+    
+    # - type: "quantile_bin"
+    #   matching_type: "equals"
+    #   matching_value: "MEDICAL//bp_systolic"
+    #   value_column: "numeric_value" 
+    #   k: 10 # 10 quantile bins
+    
+    # # Bin any remaining measurement codes
+    # - type: "quantile_bin"
+    #   matching_type: "starts_with"
+    #   matching_value: "MEASUREMENT//"
+    #   value_column: "numeric_value"
+    #   k: 10 # 10 quantile bins
+    
+    # # Insert Age
+    # - type: "decimal_age"
+    #   keep_meds_birth: True
     
 
 # 3. Add time intervals after tokenization
@@ -157,12 +196,14 @@ postprocessing:
 
     - type: "demographic_sort_order"
       token_patterns:
-        - "AGE_decile"
-        - "AGE_unit"
+        - "AGE_bin"
+        # - "AGE_unit"
         - "GENDER//"
         - "ETHNICITY//"
         - "REGION//"
         - "MEDICAL//BMI"
+
+    - type: "remove_numeric"
         
 
 # 4. Define the tokenizer settings

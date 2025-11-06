@@ -10,9 +10,9 @@ from tqdm import tqdm
 from typing import List
 from src.preprocessing.base import BasePreprocessor
 from src.postprocessing.base import Postprocessor
-from src.preprocessing import QuantileBinPreprocessor, CodeEnrichmentPreprocessor, LoadStaticDataPreprocessor, EthosQuantileAgePreprocessor, DemographicAggregationPreprocessor
+from src.preprocessing import QuantileBinPreprocessor, CodeEnrichmentPreprocessor, LoadStaticDataPreprocessor, EthosQuantileAgePreprocessor, DemographicAggregationPreprocessor, BinnedAgePreprocessor, QuantileBin3LevelPreprocessor
 from src.preprocessing.code_truncation import CodeTruncationPreprocessor
-from src.postprocessing import TimeIntervalPostprocessor, DemographicSortOrderPostprocessor
+from src.postprocessing import TimeIntervalPostprocessor, DemographicSortOrderPostprocessor, RemoveNumericPostprocessor
 from src.preprocessing.utils import fit_preprocessors_jointly
 from src.preprocessing.decimal_age import DecimalAgePreprocessor
 
@@ -107,6 +107,16 @@ def run_pipeline(config: dict, run_name: str, overwrite: bool = False):
                 preprocessor = DecimalAgePreprocessor(
                     keep_meds_birth=preprocessing_config.get("keep_meds_birth", False)
                 )
+            elif preprocessing_config["type"] == "binned_age":
+                preprocessor = BinnedAgePreprocessor(
+                    keep_meds_birth=preprocessing_config.get("keep_meds_birth", False)
+                )
+            elif preprocessing_config["type"] == "quantile_bin_3level":
+                preprocessor = QuantileBin3LevelPreprocessor(
+                    matching_type=preprocessing_config["matching_type"],
+                    matching_value=preprocessing_config["matching_value"],
+                    value_column=preprocessing_config["value_column"]
+                )
             elif preprocessing_config["type"] == "demographic_aggregation":
                 preprocessor = DemographicAggregationPreprocessor(
                     matching_type="",  # Not used for demographic aggregation
@@ -130,6 +140,8 @@ def run_pipeline(config: dict, run_name: str, overwrite: bool = False):
                 postprocessor = TimeIntervalPostprocessor(postprocessing_config["interval_tokens"])
             elif postprocessing_config["type"] == "demographic_sort_order":
                 postprocessor = DemographicSortOrderPostprocessor(postprocessing_config["token_patterns"])
+            elif postprocessing_config["type"] == "remove_numeric":
+                postprocessor = RemoveNumericPostprocessor()
             else:
                 raise ValueError(f"Postprocessor {postprocessing_config['type']} not supported")
             

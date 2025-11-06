@@ -5,6 +5,8 @@ from .ethos_quantile_age import EthosQuantileAgePreprocessor
 from .demographic_aggregation import DemographicAggregationPreprocessor
 from .base import BasePreprocessor, ValuePreprocessor, CodePreprocessor
 from .decimal_age import DecimalAgePreprocessor
+from .binned_age import BinnedAgePreprocessor
+from .quantile_bin_3level import QuantileBin3LevelPreprocessor
 
 # Backward compatibility alias
 Preprocessor = ValuePreprocessor
@@ -19,5 +21,7 @@ __all__ = [
     "ValuePreprocessor", 
     "CodePreprocessor", 
     "Preprocessor",
-    "DecimalAgePreprocessor"
+    "DecimalAgePreprocessor",
+    "BinnedAgePreprocessor",
+    "QuantileBin3LevelPreprocessor"
 ]
