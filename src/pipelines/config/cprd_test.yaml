@@ -38,20 +38,20 @@ preprocessing:
         insert_code: False
         valid_values: ["WHITE", "BLACK", "ASIAN", "MIXED", "OTHER"]
         mappings:
-          "WHITE": "Ethnicity WHITE"
-          "INDIAN": "Ethnicity ASIAN"
-          "BL CARIB": "Ethnicity BLACK"
-          "OTHER": "Ethnicity OTHER"
-          "OTH ASIAN": "Ethnicity ASIAN"
-          "BL AFRIC": "Ethnicity BLACK"
-          "PAKISTANI": "Ethnicity ASIAN"
-          "MIXED": "Ethnicity MIXED"
-          "ASIAN OR BRITISH_ASIAN": "Ethnicity ASIAN"
-          "BL OTHER": "Ethnicity BLACK"
-          "CHINESE": "Ethnicity ASIAN"
-          "BLACK OR BLACK BRITISH": "Ethnicity BLACK"
-          "BANGLADESHI": "Ethnicity ASIAN"
-          "UNKNOWN": "Ethnicity OTHER"
+          "WHITE": "WHITE"
+          "INDIAN": "ASIAN"
+          "BL CARIB": "BLACK"
+          "OTHER": "OTHER"
+          "OTH ASIAN": "ASIAN"
+          "BL AFRIC": "BLACK"
+          "PAKISTANI": "ASIAN"
+          "MIXED": "MIXED"
+          "ASIAN OR BRITISH_ASIAN": "ASIAN"
+          "BL OTHER": "BLACK"
+          "CHINESE": "ASIAN"
+          "BLACK OR BLACK BRITISH": "BLACK"
+          "BANGLADESHI": "ASIAN"
+          "UNKNOWN": "OTHER"
       
       # Region 
       - column_name: "region"
@@ -64,21 +64,21 @@ preprocessing:
       - token_pattern: "MEDICAL//bmi"
         value_column: "numeric_value"
         aggregation: "median"
-        num_bins: 10
+        num_bins: 5
         token_prefix: "MEDICAL//BMI"
         insert_code: True
         remove_original_tokens: True
       - token_pattern: "MEDICAL//height"
         value_column: "numeric_value"
         aggregation: "median"
-        num_bins: 10
+        num_bins: 5
         token_prefix: "MEDICAL//HEIGHT"
         insert_code: True
         remove_original_tokens: True
       - token_pattern: "MEDICAL//weight"
         value_column: "numeric_value"
         aggregation: "median"
-        num_bins: 10
+        num_bins: 5
         token_prefix: "MEDICAL//WEIGHT"
         insert_code: True
         remove_original_tokens: True

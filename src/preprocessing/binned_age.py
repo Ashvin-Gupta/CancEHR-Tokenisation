@@ -76,8 +76,9 @@ class BinnedAgePreprocessor(BasePreprocessor):
                 # Create the age bin event
                 age_event = {
                     "subject_id": subject_id, "time": None,
-                    "code": "AGE_bin", "numeric_value": None,
-                    "text_value": f"AGE_{age_bin_lower}-{age_bin_upper}"
+                    # "code": "AGE_bin", "numeric_value": None,
+                    "code": f"AGE: {age_bin_lower}-{age_bin_upper}", "numeric_value": None,
+                    "text_value": None
                 }
 
                 # Fill in schema for the event
