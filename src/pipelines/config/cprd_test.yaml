@@ -4,9 +4,9 @@ name: "cprd_custom_tokenization_pipeline"
 
 # 1. Point to your data and define where to save the output
 data:
-    path: "/data/scratch/qc25022/gallbladder/final_cleaned_events" 
+    path: "/data/scratch/qc25022/pancreas/final_cleaned_events" 
 
-save_path: "/data/scratch/qc25022/gallbladder/tokenised_data" 
+save_path: "/data/scratch/qc25022/pancreas/tokenised_data" 
 
 # 2. Define the preprocessing steps in order
 preprocessing:
