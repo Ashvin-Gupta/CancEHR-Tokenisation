@@ -63,6 +63,12 @@ class DemographicAggregationPreprocessor(BasePreprocessor):
             # Validate num_bins
             if measurement["num_bins"] < 2:
                 raise ValueError(f"Measurement {i}: num_bins must be at least 2")
+            
+            bin_labels = measurement.get("bin_labels")
+            if bin_labels is not None:
+                if len(bin_labels) != measurement["num_bins"]:
+                    raise ValueError(f"Measurement {i}: bin_labels must have length {measurement['num_bins']}")
+                
     
     def fit(self, event_files: List[str]) -> None:
         """
@@ -172,6 +178,11 @@ class DemographicAggregationPreprocessor(BasePreprocessor):
         
         edges = self.quantile_bins[measurement_idx]
         bin_index = np.digitize(value, edges[1:-1])  # Exclude first and last edges
+
+        measurement = self.measurements[measurement_idx]
+        bin_labels = measurement.get("bin_labels")
+        if bin_labels is not None:
+            return bin_labels[bin_index]
         
         return f"Q{bin_index + 1}"  # 1-indexed bin labels
     

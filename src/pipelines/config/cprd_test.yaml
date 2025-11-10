@@ -65,6 +65,7 @@ preprocessing:
         value_column: "numeric_value"
         aggregation: "median"
         num_bins: 5
+        bin_labels: ["very low", "low", "normal", "high", "very high"]
         token_prefix: "MEDICAL//BMI"
         insert_code: True
         remove_original_tokens: True
