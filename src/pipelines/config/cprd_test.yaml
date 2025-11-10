@@ -121,55 +121,6 @@ preprocessing:
     # Insert Age
     - type: "binned_age"
       keep_meds_birth: True
-
-    # # Next, bin the LAB codes
-    # - type: "quantile_bin"
-    #   matching_type: "starts_with"
-    #   matching_value: "LAB//"
-    #   value_column: "numeric_value" # Assuming LAB values are in this column
-    #   k: 10 # 10 quantile bins
-
-    # # Then, bin the BMI codes
-    # - type: "quantile_bin"
-    #   matching_type: "equals"
-    #   matching_value: "MEDICAL//bmi"
-    #   value_column: "numeric_value"
-    #   k: 10 # 10 quantile bins
-    
-    # - type: "quantile_bin"
-    #   matching_type: "equals"
-    #   matching_value: "MEDICAL//height"
-    #   value_column: "numeric_value" 
-    #   k: 10 # 10 quantile bins
-    
-    # - type: "quantile_bin"
-    #   matching_type: "equals"
-    #   matching_value: "MEDICAL//weight"
-    #   value_column: "numeric_value" 
-    #   k: 10 # 10 quantile bins
-    
-    # - type: "quantile_bin"
-    #   matching_type: "equals"
-    #   matching_value: "MEDICAL//bp_diastolic"
-    #   value_column: "numeric_value" 
-    #   k: 10 # 10 quantile bins
-    
-    # - type: "quantile_bin"
-    #   matching_type: "equals"
-    #   matching_value: "MEDICAL//bp_systolic"
-    #   value_column: "numeric_value" 
-    #   k: 10 # 10 quantile bins
-    
-    # # Bin any remaining measurement codes
-    # - type: "quantile_bin"
-    #   matching_type: "starts_with"
-    #   matching_value: "MEASUREMENT//"
-    #   value_column: "numeric_value"
-    #   k: 10 # 10 quantile bins
-    
-    # # Insert Age
-    # - type: "decimal_age"
-    #   keep_meds_birth: True
     
 
 # 3. Add time intervals after tokenization
@@ -196,8 +147,7 @@ postprocessing:
 
     - type: "demographic_sort_order"
       token_patterns:
-        - "AGE_bin"
-        # - "AGE_unit"
+        - "AGE:"
         - "GENDER//"
         - "ETHNICITY//"
         - "REGION//"
