@@ -157,7 +157,7 @@ postprocessing:
     - type: "remove_numeric"
 
     - type: "natural_language_translation"
-      medical_lookup_filepath1: "/data/home/qc25022/CancEHR-Tokenisation/src/resources/MedicalDictTranslation.csv"
+      medical_lookup_filepath1: "/data/home/qc25022/CancEHR-Tokenisation/src/resources/MedicalDictTranslation1.csv"
       medical_lookup_filepath2: "/data/home/qc25022/CancEHR-Tokenisation/src/resources/MedicalDictTranslation2.csv"
       lab_lookup_filepath: "/data/home/qc25022/CancEHR-Tokenisation/src/resources/LabLookUP.csv"
       region_lookup_filepath: "/data/home/qc25022/CancEHR-Tokenisation/src/resources/RegionLookUP.csv"
