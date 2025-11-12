@@ -16,6 +16,7 @@ from src.postprocessing import TimeIntervalPostprocessor, DemographicSortOrderPo
 from src.preprocessing.utils import fit_preprocessors_jointly
 from src.preprocessing.decimal_age import DecimalAgePreprocessor
 from src.postprocessing.natural_language_translation import NaturalLanguageTranslationPostprocessor
+from src.tokenization.algorithms.bpe import BPETokenizer
 
 DATASET_DIRS = ["train", "tuning", "held_out"]
 
