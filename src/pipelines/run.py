@@ -15,6 +15,7 @@ from src.preprocessing.code_truncation import CodeTruncationPreprocessor
 from src.postprocessing import TimeIntervalPostprocessor, DemographicSortOrderPostprocessor, RemoveNumericPostprocessor
 from src.preprocessing.utils import fit_preprocessors_jointly
 from src.preprocessing.decimal_age import DecimalAgePreprocessor
+from src.postprocessing.natural_language_translation import NaturalLanguageTranslationPostprocessor
 
 DATASET_DIRS = ["train", "tuning", "held_out"]
 
@@ -142,6 +143,13 @@ def run_pipeline(config: dict, run_name: str, overwrite: bool = False):
                 postprocessor = DemographicSortOrderPostprocessor(postprocessing_config["token_patterns"])
             elif postprocessing_config["type"] == "remove_numeric":
                 postprocessor = RemoveNumericPostprocessor()
+            elif postprocessing_config["type"] == "natural_language_translation":
+                postprocessor = NaturalLanguageTranslationPostprocessor(
+                    medical_lookup_filepath1=postprocessing_config["medical_lookup_filepath1"],
+                    medical_lookup_filepath2=postprocessing_config["medical_lookup_filepath2"],
+                    lab_lookup_filepath=postprocessing_config["lab_lookup_filepath"],
+                    region_lookup_filepath=postprocessing_config["region_lookup_filepath"]
+                )
             else:
                 raise ValueError(f"Postprocessor {postprocessing_config['type']} not supported")
             
@@ -154,6 +162,14 @@ def run_pipeline(config: dict, run_name: str, overwrite: bool = False):
             insert_event_tokens=config["tokenization"]["insert_event_tokens"],
             insert_numeric_tokens=config["tokenization"]["insert_numeric_tokens"],
             insert_text_tokens=config["tokenization"]["insert_text_tokens"]
+        )
+    elif config["tokenization"]["tokenizer"] == "bpe":
+        tokenizer = BPETokenizer(
+            vocab_size=config["tokenization"]["vocab_size"],
+            insert_event_tokens=config["tokenization"]["insert_event_tokens"],
+            insert_numeric_tokens=config["tokenization"]["insert_numeric_tokens"],
+            insert_text_tokens=config["tokenization"]["insert_text_tokens"],
+            end_of_word_suffix=config["tokenization"].get("end_of_word_suffix", "</w>")
         )
     else:
         raise ValueError(f"Tokenizer {config['tokenization']['tokenizer']} not supported")

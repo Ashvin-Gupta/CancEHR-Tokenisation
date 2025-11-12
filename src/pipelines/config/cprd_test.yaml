@@ -4,9 +4,9 @@ name: "cprd_custom_tokenization_pipeline"
 
 # 1. Point to your data and define where to save the output
 data:
-    path: "/data/scratch/qc25022/pancreas/final_cleaned_events" 
+    path: "/data/scratch/qc25022/gallbladder/final_cleaned_events" 
 
-save_path: "/data/scratch/qc25022/pancreas/tokenised_data" 
+save_path: "/data/scratch/qc25022/gallbladder/tokenised_data_bpe" 
 
 # 2. Define the preprocessing steps in order
 preprocessing:
@@ -155,11 +155,17 @@ postprocessing:
         - "MEDICAL//BMI"
 
     - type: "remove_numeric"
+
+    - type: "natural_language_translation"
+      medical_lookup_filepath1: "/data/home/qc25022/CancEHR-Tokenisation/src/resources/MedicalDictTranslation.csv"
+      medical_lookup_filepath2: "/data/home/qc25022/CancEHR-Tokenisation/src/resources/MedicalDictTranslation2.csv"
+      lab_lookup_filepath: "/data/home/qc25022/CancEHR-Tokenisation/src/resources/LabLookUP.csv"
+      region_lookup_filepath: "/data/home/qc25022/CancEHR-Tokenisation/src/resources/RegionLookUP.csv"
         
 
 # 4. Define the tokenizer settings
 tokenization:
-    tokenizer: "word_level"
+    tokenizer: "bpe"
     vocab_size: 5000 # Adjust as needed
     insert_event_tokens: False
     insert_numeric_tokens: False
