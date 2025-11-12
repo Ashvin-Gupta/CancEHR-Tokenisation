@@ -137,58 +137,114 @@ class NaturalLanguageTranslationPostprocessor(Postprocessor):
         except Exception as e:
             print(f"Warning: Failed to translate '{code}': {e}")
             return code
-    
-    def encode(self, processed_events: List[Dict]) -> List[Dict]:
+    def _encode(self, datapoint: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Translate codes in processed events to natural language.
-        
-        This processes the event_list BEFORE it gets converted to strings.
+        Translate codes in a single subject's events to natural language.
         
         Args:
-            processed_events: List of dicts with "subject_id" and "event_list"
+            datapoint: Dict with "subject_id" and "event_list"
             
         Returns:
-            Modified processed_events with translated codes
+            Modified datapoint with translated codes
         """
-        for subject in processed_events:
-            event_list = subject["event_list"]
-            
-            # Process events, looking ahead for binning indicators
-            new_event_list = []
-            i = 0
-            
-            while i < len(event_list):
-                event = event_list[i]
-                code = event["code"]
-                
-                # Check if this is a measurable concept
-                is_measurable = (
-                    code.startswith('LAB//') or 
-                    code.startswith('MEASUREMENT//') or 
-                    code.startswith('MEDICAL//BMI') or
-                    code.startswith('MEDICAL//bp_')
-                )
-                
-                # Look ahead for binning indicator
-                binned_value = None
-                if is_measurable and i + 1 < len(event_list):
-                    next_code = event_list[i + 1]["code"]
-                    if next_code in ['low', 'normal', 'high', 'very low', 'very high']:
-                        binned_value = next_code
-                        # We'll skip the next event since we're consuming it
-                        i += 1
-                
-                # Translate the code
-                translated = self._translate_code(code, binned_value)
-                
-                # Only add if translation produced something
-                if translated is not None:
-                    new_event = event.copy()
-                    new_event["code"] = translated
-                    new_event_list.append(new_event)
-                
-                i += 1
-            
-            subject["event_list"] = new_event_list
+        event_list = datapoint["event_list"]
         
-        return processed_events
+        # Process events, looking ahead for binning indicators
+        new_event_list = []
+        i = 0
+        
+        while i < len(event_list):
+            event = event_list[i]
+            code = event["code"]
+            
+            # Check if this is a measurable concept that might have binning
+            is_measurable = (
+                code.startswith('LAB//') or 
+                code.startswith('MEASUREMENT//') or 
+                code.startswith('MEDICAL//BMI') or
+                code.startswith('MEDICAL//bp_')
+            )
+            
+            # Look ahead for binning indicator (n+1)
+            binned_value = None
+            skip_next = False
+            
+            if is_measurable and i + 1 < len(event_list):
+                next_code = event_list[i + 1]["code"]
+                # Check if next code is a binning indicator
+                if next_code in ['low', 'normal', 'high', 'very low', 'very high']:
+                    binned_value = next_code
+                    skip_next = True
+            
+            # Translate the code (with optional binned value)
+            translated = self._translate_code(code, binned_value)
+            
+            # Only add if translation produced something meaningful
+            if translated is not None:
+                new_event = event.copy()
+                new_event["code"] = translated
+                new_event_list.append(new_event)
+            
+            # Move to next event (skip binning indicator if we consumed it)
+            if skip_next:
+                i += 2  # Skip both current and next
+            else:
+                i += 1  # Just move to next
+        
+        datapoint["event_list"] = new_event_list
+        return datapoint
+    
+    # def _encode(self, processed_events: List[Dict]) -> List[Dict]:
+    #     """
+    #     Translate codes in processed events to natural language.
+        
+    #     This processes the event_list BEFORE it gets converted to strings.
+        
+    #     Args:
+    #         processed_events: List of dicts with "subject_id" and "event_list"
+            
+    #     Returns:
+    #         Modified processed_events with translated codes
+    #     """
+    #     for subject in processed_events:
+    #         event_list = subject["event_list"]
+            
+    #         # Process events, looking ahead for binning indicators
+    #         new_event_list = []
+    #         i = 0
+            
+    #         while i < len(event_list):
+    #             event = event_list[i]
+    #             code = event["code"]
+                
+    #             # Check if this is a measurable concept
+    #             is_measurable = (
+    #                 code.startswith('LAB//') or 
+    #                 code.startswith('MEASUREMENT//') or 
+    #                 code.startswith('MEDICAL//BMI') or
+    #                 code.startswith('MEDICAL//bp_')
+    #             )
+                
+    #             # Look ahead for binning indicator
+    #             binned_value = None
+    #             if is_measurable and i + 1 < len(event_list):
+    #                 next_code = event_list[i + 1]["code"]
+    #                 if next_code in ['low', 'normal', 'high', 'very low', 'very high']:
+    #                     binned_value = next_code
+    #                     # We'll skip the next event since we're consuming it
+    #                     i += 1
+                
+    #             # Translate the code
+    #             translated = self._translate_code(code, binned_value)
+                
+    #             # Only add if translation produced something
+    #             if translated is not None:
+    #                 new_event = event.copy()
+    #                 new_event["code"] = translated
+    #                 new_event_list.append(new_event)
+                
+    #             i += 1
+            
+    #         subject["event_list"] = new_event_list
+        
+    #     return processed_events
