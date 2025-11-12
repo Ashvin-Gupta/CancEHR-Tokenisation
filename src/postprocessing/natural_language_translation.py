@@ -1,6 +1,6 @@
 from src.postprocessing.base import Postprocessor
 import pandas as pd
-from typing import List, Dict
+from typing import List, Dict, Any
 
 class NaturalLanguageTranslationPostprocessor(Postprocessor):
     """
@@ -137,6 +137,7 @@ class NaturalLanguageTranslationPostprocessor(Postprocessor):
         except Exception as e:
             print(f"Warning: Failed to translate '{code}': {e}")
             return code
+
     def _encode(self, datapoint: Dict[str, Any]) -> Dict[str, Any]:
         """
         Translate codes in a single subject's events to natural language.
