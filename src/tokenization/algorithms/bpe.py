@@ -94,6 +94,7 @@ class BPETokenizer(Tokenizer):
                     events = preprocessor.encode_polars(events)
             
             processed_events = self._process_events(events)
+            print(processed_events)
             
             if len(postprocessors) > 0:
                 for postprocessor in postprocessors:
