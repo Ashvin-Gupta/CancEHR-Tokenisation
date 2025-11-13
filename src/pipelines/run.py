@@ -17,6 +17,7 @@ from src.preprocessing.utils import fit_preprocessors_jointly
 from src.preprocessing.decimal_age import DecimalAgePreprocessor
 from src.postprocessing.natural_language_translation import NaturalLanguageTranslationPostprocessor
 from src.tokenization.algorithms.bpe import BPETokenizer
+from src.tokenization.algorithms.hf_bpe import HFBPETokenizer
 
 DATASET_DIRS = ["train", "tuning", "held_out"]
 
@@ -172,6 +173,14 @@ def run_pipeline(config: dict, run_name: str, overwrite: bool = False):
             insert_text_tokens=config["tokenization"]["insert_text_tokens"],
             end_of_word_suffix=config["tokenization"].get("end_of_word_suffix", "</w>")
         )
+    elif config["tokenization"]["tokenizer"] == "hf_bpe":
+        tokenizer = HFBPETokenizer(
+            vocab_size=config["tokenization"]["vocab_size"],
+            insert_event_tokens=config["tokenization"]["insert_event_tokens"],
+            insert_numeric_tokens=config["tokenization"]["insert_numeric_tokens"],
+            insert_text_tokens=config["tokenization"]["insert_text_tokens"],
+            tokenizer_dir=config["tokenization"].get("tokenizer_dir"),  # optional
+        )
     else:
         raise ValueError(f"Tokenizer {config['tokenization']['tokenizer']} not supported")
 
@@ -213,7 +222,7 @@ def validate_config(config: dict):
     """
     
     # Check tokenizer is valid
-    if config["tokenization"]["tokenizer"] not in ["word_level", "bpe"]:
+    if config["tokenization"]["tokenizer"] not in ["word_level", "bpe", "hf_bpe"]:
         raise ValueError(f"Tokenizer {config['tokenization']['tokenizer']} not supported")
     
     # Check data path is valid and files exist
