@@ -85,8 +85,9 @@ class BPETokenizer(Tokenizer):
         
         # Step 1: Collect all words and their frequencies
         word_freqs = Counter()
+        sample_trajectories = []
         
-        for file_path in tqdm(event_files, desc="Collecting words"):
+        for file_idx, file_path in enumerate(tqdm(event_files, desc="Collecting words")):
             events = pl.read_parquet(file_path)
             
             if len(preprocessors) > 0:
@@ -100,6 +101,17 @@ class BPETokenizer(Tokenizer):
                     processed_events = postprocessor.encode(processed_events)
             
             subject_strs = self._events_to_lists(processed_events)["strings"]
+            
+            # Collect sample trajectories from first file
+            if file_idx == 0 and len(sample_trajectories) < 3:
+                for i, string_list in enumerate(subject_strs[:3]):
+                    sample_trajectories.append(string_list)
+                    print(f"\n=== Sample Trajectory {i+1} ===")
+                    print(f"Length: {len(string_list)} tokens")
+                    print(f"First 20 tokens: {string_list[:20]}")
+                    if len(string_list) > 20:
+                        print(f"Last 10 tokens: {string_list[-10:]}")
+                    print("=" * 50)
             
             for string_list in subject_strs:
                 for word in string_list:
