@@ -121,7 +121,7 @@ preprocessing:
     
     # Insert Age
     - type: "binned_age"
-      keep_meds_birth: True
+      keep_meds_birth: False
     
 
 # 3. Add time intervals after tokenization
@@ -153,20 +153,15 @@ postprocessing:
         - "ETHNICITY//"
         - "REGION//"
         - "MEDICAL//BMI"
+        - "LIFESTYLE//"
 
     - type: "remove_numeric"
-
-    - type: "natural_language_translation"
-      medical_lookup_filepath1: "/data/home/qc25022/CancEHR-Tokenisation/src/resources/MedicalDictTranslation1.csv"
-      medical_lookup_filepath2: "/data/home/qc25022/CancEHR-Tokenisation/src/resources/MedicalDictTranslation2.csv"
-      lab_lookup_filepath: "/data/home/qc25022/CancEHR-Tokenisation/src/resources/LabLookUP.csv"
-      region_lookup_filepath: "/data/home/qc25022/CancEHR-Tokenisation/src/resources/RegionLookUp.csv"
         
 
 # 4. Define the tokenizer settings
 tokenization:
-    tokenizer: "bpe"
-    vocab_size: 5000 # Adjust as needed
+    tokenizer: "word_level"
+    vocab_size: 6000
     insert_event_tokens: False
     insert_numeric_tokens: False
     insert_text_tokens: False

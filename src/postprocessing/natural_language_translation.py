@@ -2,6 +2,10 @@ from src.postprocessing.base import Postprocessor
 import pandas as pd
 from typing import List, Dict, Any
 
+
+# THIS DOES NOT CURRENTLY WORK SO DO NOT USE IT
+
+
 class NaturalLanguageTranslationPostprocessor(Postprocessor):
     """
     Translates structured medical codes to natural language.
