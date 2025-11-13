@@ -178,6 +178,7 @@ class NaturalLanguageTranslationPostprocessor(Postprocessor):
                     skip_next = True
             
             # Translate the code (with optional binned value)
+            print(f"Translating code: {code} with binned value: {binned_value}")
             translated = self._translate_code(code, binned_value)
             
             # Only add if translation produced something meaningful
