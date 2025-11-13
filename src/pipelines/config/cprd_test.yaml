@@ -6,7 +6,7 @@ name: "cprd_custom_tokenization_pipeline"
 data:
     path: "/data/scratch/qc25022/gallbladder/final_cleaned_events" 
 
-save_path: "/data/scratch/qc25022/gallbladder/tokenised_data_bpe" 
+save_path: "/data/scratch/qc25022/gallbladder/tokenised_data_word_level" 
 
 # 2. Define the preprocessing steps in order
 preprocessing:
