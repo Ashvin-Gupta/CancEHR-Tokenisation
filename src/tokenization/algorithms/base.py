@@ -71,6 +71,7 @@ class Tokenizer(ABC):
                     "timestamp": event["time"],
                     "numeric_value": event["numeric_value"],
                     "text_value": event["text_value"]
+                    "unit": event["unit"]
                 }
                 event_list.append(event)
 
@@ -154,6 +155,10 @@ class Tokenizer(ABC):
                     else:
                         strings.append(str(event["text_value"]))
                         timestamps.append(format_timestamp(event["timestamp"]))
+                
+                if event["unit"] is not None:
+                    strings.append(str(event["unit"]))
+                    timestamps.append(format_timestamp(event["timestamp"]))
                 
                 if self.insert_event_tokens:
                     strings.append(self.event_end_token)

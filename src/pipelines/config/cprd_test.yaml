@@ -4,9 +4,9 @@ name: "cprd_custom_tokenization_pipeline"
 
 # 1. Point to your data and define where to save the output
 data:
-    path: "/data/scratch/qc25022/pancreas/final_cleaned_events" 
+    path: "/data/scratch/qc25022/pancreas/final_cleaned_events_debug" 
 
-save_path: "/data/scratch/qc25022/pancreas/tokenised_data_word_level" 
+save_path: "/data/scratch/qc25022/pancreas/tokenised_data_word_level_debug" 
 
 # 2. Define the preprocessing steps in order
 preprocessing:
@@ -84,40 +84,40 @@ preprocessing:
         insert_code: True
         remove_original_tokens: True
       
-    - type: "quantile_bin_3level"
-      matching_type: "starts_with"
-      matching_value: "LAB//"
-      value_column: "numeric_value"
+    # - type: "quantile_bin_3level"
+    #   matching_type: "starts_with"
+    #   matching_value: "LAB//"
+    #   value_column: "numeric_value"
     
-    - type: "quantile_bin_3level"
-      matching_type: "starts_with"
-      matching_value: "MEDICAL//bmi"
-      value_column: "numeric_value"
+    # - type: "quantile_bin_3level"
+    #   matching_type: "starts_with"
+    #   matching_value: "MEDICAL//bmi"
+    #   value_column: "numeric_value"
     
-    - type: "quantile_bin_3level"
-      matching_type: "starts_with"
-      matching_value: "MEDICAL//height"
-      value_column: "numeric_value"
+    # - type: "quantile_bin_3level"
+    #   matching_type: "starts_with"
+    #   matching_value: "MEDICAL//height"
+    #   value_column: "numeric_value"
     
-    - type: "quantile_bin_3level"
-      matching_type: "starts_with"
-      matching_value: "MEDICAL//weight"
-      value_column: "numeric_value" 
+    # - type: "quantile_bin_3level"
+    #   matching_type: "starts_with"
+    #   matching_value: "MEDICAL//weight"
+    #   value_column: "numeric_value" 
     
-    - type: "quantile_bin_3level"
-      matching_type: "starts_with"
-      matching_value: "MEDICAL//bp_diastolic"
-      value_column: "numeric_value"
+    # - type: "quantile_bin_3level"
+    #   matching_type: "starts_with"
+    #   matching_value: "MEDICAL//bp_diastolic"
+    #   value_column: "numeric_value"
     
-    - type: "quantile_bin_3level"
-      matching_type: "starts_with"
-      matching_value: "MEDICAL//bp_systolic"
-      value_column: "numeric_value"
+    # - type: "quantile_bin_3level"
+    #   matching_type: "starts_with"
+    #   matching_value: "MEDICAL//bp_systolic"
+    #   value_column: "numeric_value"
     
-    - type: "quantile_bin_3level"
-      matching_type: "starts_with"
-      matching_value: "MEASUREMENT//"
-      value_column: "numeric_value"
+    # - type: "quantile_bin_3level"
+    #   matching_type: "starts_with"
+    #   matching_value: "MEASUREMENT//"
+    #   value_column: "numeric_value"
     
     # Insert Age
     - type: "binned_age"
