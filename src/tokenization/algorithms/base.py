@@ -70,7 +70,7 @@ class Tokenizer(ABC):
                     "code": event["code"],
                     "timestamp": event["time"],
                     "numeric_value": event["numeric_value"],
-                    "text_value": event["text_value"]
+                    "text_value": event["text_value"],
                     "unit": event["unit"]
                 }
                 event_list.append(event)
