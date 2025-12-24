@@ -72,8 +72,7 @@ class Tokenizer(ABC):
                     "timestamp": event["time"],
                     "numeric_value": event["numeric_value"],
                     "text_value": event["text_value"],
-                    "unit": event["unit"],
-                    print(f"unit: {event['unit']}")
+                    "unit": event.get("unit", None),
                 }
                 event_list.append(event)
 
