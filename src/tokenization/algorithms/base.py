@@ -61,6 +61,7 @@ class Tokenizer(ABC):
             List[str]: the processed events
         """
         processed_events = []
+        print(events.columns)
         
         for subject_id, subject_events in events.group_by("subject_id", maintain_order=True):
 
