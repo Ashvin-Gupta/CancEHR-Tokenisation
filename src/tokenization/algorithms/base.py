@@ -67,14 +67,14 @@ class Tokenizer(ABC):
 
             event_list = []
             for event in subject_events.to_dicts():
-                event = {
+                event_dict = {
                     "code": event["code"],
                     "timestamp": event["time"],
                     "numeric_value": event["numeric_value"],
                     "text_value": event["text_value"],
-                    "unit": event.get("unit", None),
+                    "unit": event.get("unit")
                 }
-                event_list.append(event)
+                event_list.append(event_dict)
 
             processed_events.append(
                 {
@@ -116,6 +116,7 @@ class Tokenizer(ABC):
             timestamps = [0]
 
             for event in subject["event_list"]:
+                print(event.keys())
 
                 # Add event start token if specified
                 if self.insert_event_tokens:
