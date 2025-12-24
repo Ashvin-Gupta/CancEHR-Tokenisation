@@ -158,7 +158,7 @@ class Tokenizer(ABC):
                         strings.append(str(event["text_value"]))
                         timestamps.append(format_timestamp(event["timestamp"]))
                 
-                if event.get("unit") is not None
+                if event.get("unit") is not None:
                     strings.append(str(event["unit"]))
                     timestamps.append(format_timestamp(event["timestamp"]))
                 
