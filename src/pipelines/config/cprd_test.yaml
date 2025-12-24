@@ -155,13 +155,13 @@ postprocessing:
         - "MEDICAL//BMI"
         - "LIFESTYLE//"
 
-    - type: "remove_numeric"
+    # - type: "remove_numeric"
         
 
 # 4. Define the tokenizer settings
 tokenization:
     tokenizer: "word_level"
-    vocab_size: 6000
+    vocab_size: 20000
     insert_event_tokens: False
     insert_numeric_tokens: False
     insert_text_tokens: False

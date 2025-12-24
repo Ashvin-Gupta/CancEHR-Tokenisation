@@ -80,7 +80,8 @@ class TimeIntervalPostprocessor(Postprocessor):
                             'code': f'<time_interval_{interval_name}>',
                             'timestamp': current_timestamp,
                             'numeric_value': None,
-                            'text_value': None
+                            'text_value': None,
+                            'unit': None
                         }
                         new_event_list.append(interval_token)
                         break
