@@ -10,7 +10,7 @@ from tqdm import tqdm
 from typing import List
 from src.preprocessing.base import BasePreprocessor
 from src.postprocessing.base import Postprocessor
-from src.preprocessing import QuantileBinPreprocessor, CodeEnrichmentPreprocessor, LoadStaticDataPreprocessor, EthosQuantileAgePreprocessor, DemographicAggregationPreprocessor, BinnedAgePreprocessor, QuantileBin3LevelPreprocessor
+from src.preprocessing import QuantileBinPreprocessor, CodeEnrichmentPreprocessor, LoadStaticDataPreprocessor, EthosQuantileAgePreprocessor, DemographicAggregationPreprocessor, BinnedAgePreprocessor, QuantileBin3LevelPreprocessor, RoundNumericPreprocessor
 from src.preprocessing.code_truncation import CodeTruncationPreprocessor
 from src.postprocessing import TimeIntervalPostprocessor, DemographicSortOrderPostprocessor, RemoveNumericPostprocessor
 from src.preprocessing.utils import fit_preprocessors_jointly
@@ -125,6 +125,13 @@ def run_pipeline(config: dict, run_name: str, overwrite: bool = False):
                     matching_type="",  # Not used for demographic aggregation
                     matching_value="", # Not used for demographic aggregation
                     measurements=preprocessing_config["measurements"]
+                )
+            elif preprocessing_config["type"] == "round_numeric":
+                preprocessor = RoundNumericPreprocessor(
+                    matching_type=preprocessing_config["matching_type"],
+                    matching_value=preprocessing_config["matching_value"],
+                    value_column=preprocessing_config["value_column"],
+                    decimals=preprocessing_config.get("decimals", 1)
                 )
             else:
                 raise ValueError(f"Preprocessor {preprocessing_config['type']} not supported")

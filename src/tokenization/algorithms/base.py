@@ -116,7 +116,6 @@ class Tokenizer(ABC):
             timestamps = [0]
 
             for event in subject["event_list"]:
-                print(event.keys())
 
                 # Add event start token if specified
                 if self.insert_event_tokens:

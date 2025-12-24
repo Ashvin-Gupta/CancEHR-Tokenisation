@@ -84,41 +84,42 @@ preprocessing:
         insert_code: True
         remove_original_tokens: True
       
-    # - type: "quantile_bin_3level"
-    #   matching_type: "starts_with"
-    #   matching_value: "LAB//"
-    #   value_column: "numeric_value"
+    - type: "round_numeric"
+      matching_type: "starts_with"
+      matching_value: "LAB//"
+      value_column: "numeric_value"
+      decimals: 1
     
-    # - type: "quantile_bin_3level"
-    #   matching_type: "starts_with"
-    #   matching_value: "MEDICAL//bmi"
-    #   value_column: "numeric_value"
+    - type: "round_numeric"
+      matching_type: "starts_with"
+      matching_value: "LAB//"
+      value_column: "numeric_value"
+      decimals: 1
     
-    # - type: "quantile_bin_3level"
-    #   matching_type: "starts_with"
-    #   matching_value: "MEDICAL//height"
-    #   value_column: "numeric_value"
+    - type: "round_numeric"
+      matching_type: "starts_with"
+      matching_value: "MEDICAL//bmi"
+      value_column: "numeric_value"
+      decimals: 1
     
-    # - type: "quantile_bin_3level"
-    #   matching_type: "starts_with"
-    #   matching_value: "MEDICAL//weight"
-    #   value_column: "numeric_value" 
-    
-    # - type: "quantile_bin_3level"
-    #   matching_type: "starts_with"
-    #   matching_value: "MEDICAL//bp_diastolic"
-    #   value_column: "numeric_value"
-    
-    # - type: "quantile_bin_3level"
-    #   matching_type: "starts_with"
-    #   matching_value: "MEDICAL//bp_systolic"
-    #   value_column: "numeric_value"
-    
-    # - type: "quantile_bin_3level"
-    #   matching_type: "starts_with"
-    #   matching_value: "MEASUREMENT//"
-    #   value_column: "numeric_value"
-    
+    - type: "round_numeric"
+      matching_type: "starts_with"
+      matching_value: "MEDICAL//bp_diastolic"
+      value_column: "numeric_value"
+      decimals: 1
+
+    - type: "round_numeric"
+      matching_type: "starts_with"
+      matching_value: "MEDICAL//bp_systolic"
+      value_column: "numeric_value"
+      decimals: 1
+
+    - type: "round_numeric"
+      matching_type: "starts_with"
+      matching_value: "MEASUREMENT//"
+      value_column: "numeric_value"
+      decimals: 1
+
     # Insert Age
     - type: "binned_age"
       keep_meds_birth: False
