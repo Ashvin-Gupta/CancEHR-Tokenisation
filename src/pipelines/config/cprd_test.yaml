@@ -64,22 +64,27 @@ preprocessing:
       - token_pattern: "MEDICAL//bmi"
         value_column: "numeric_value"
         aggregation: "median"
-        num_bins: 5
-        bin_labels: ["very low", "low", "normal", "high", "very high"]
+        decimals: 1
+        # num_bins: 5
+        # bin_labels: ["very low", "low", "normal", "high", "very high"]
         token_prefix: "MEDICAL//BMI"
         insert_code: True
         remove_original_tokens: True
+
       - token_pattern: "MEDICAL//height"
         value_column: "numeric_value"
         aggregation: "median"
-        num_bins: 5
+        # num_bins: 5
+        decimals: 1
         token_prefix: "MEDICAL//HEIGHT"
         insert_code: True
         remove_original_tokens: True
+        
       - token_pattern: "MEDICAL//weight"
         value_column: "numeric_value"
         aggregation: "median"
-        num_bins: 5
+        # num_bins: 5
+        decimals: 1
         token_prefix: "MEDICAL//WEIGHT"
         insert_code: True
         remove_original_tokens: True
