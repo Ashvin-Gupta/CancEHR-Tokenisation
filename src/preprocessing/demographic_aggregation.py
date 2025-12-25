@@ -35,10 +35,10 @@ class DemographicAggregationPreprocessor(BasePreprocessor):
         self._validate_measurements()
         
         print(f"DemographicAggregationPreprocessor initialized with {len(measurements)} measurements:")
-        for i, measurement in enumerate(measurements):
-            token_prefix = measurement.get('token_prefix', 'NO_PREFIX')
-            print(f"  {i+1}. {measurement['token_pattern']} → {token_prefix}Qx "
-                  f"({measurement['aggregation']}, {measurement['num_bins']} bins)")
+        # for i, measurement in enumerate(measurements):
+        #     token_prefix = measurement.get('token_prefix', 'NO_PREFIX')
+        #     print(f"  {i+1}. {measurement['token_pattern']} → {token_prefix}Qx "
+        #           f"({measurement['aggregation']}, {measurement['num_bins']} bins)")
     
     def _validate_measurements(self):
         """Validate measurement configurations"""
