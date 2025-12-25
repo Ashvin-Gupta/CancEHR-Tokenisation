@@ -8,6 +8,7 @@ from .decimal_age import DecimalAgePreprocessor
 from .binned_age import BinnedAgePreprocessor
 from .quantile_bin_3level import QuantileBin3LevelPreprocessor
 from .round_numeric import RoundNumericPreprocessor
+from .raw_age import RawAgePreprocessor
 
 # Backward compatibility alias
 Preprocessor = ValuePreprocessor
@@ -25,5 +26,6 @@ __all__ = [
     "DecimalAgePreprocessor",
     "BinnedAgePreprocessor",
     "QuantileBin3LevelPreprocessor",
-    "RoundNumericPreprocessor"
+    "RoundNumericPreprocessor",
+    "RawAgePreprocessor"
 ]

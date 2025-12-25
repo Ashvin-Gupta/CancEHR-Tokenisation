@@ -79,7 +79,7 @@ preprocessing:
         token_prefix: "MEDICAL//HEIGHT"
         insert_code: True
         remove_original_tokens: True
-        
+
       - token_pattern: "MEDICAL//weight"
         value_column: "numeric_value"
         aggregation: "median"
@@ -126,8 +126,9 @@ preprocessing:
       decimals: 1
 
     # Insert Age
-    - type: "binned_age"
+    - type: "raw_age"
       keep_meds_birth: False
+      decimals: 0
     
 
 # 3. Add time intervals after tokenization

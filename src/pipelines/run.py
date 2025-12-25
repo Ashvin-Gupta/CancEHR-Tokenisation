@@ -18,7 +18,7 @@ from src.preprocessing.decimal_age import DecimalAgePreprocessor
 from src.postprocessing.natural_language_translation import NaturalLanguageTranslationPostprocessor
 from src.tokenization.algorithms.bpe import BPETokenizer
 from src.tokenization.algorithms.hf_bpe import HFBPETokenizer
-
+from src.preprocessing.raw_age import RawAgePreprocessor
 DATASET_DIRS = ["train", "tuning", "held_out"]
 
 def run_pipeline(config: dict, run_name: str, overwrite: bool = False):
@@ -132,6 +132,11 @@ def run_pipeline(config: dict, run_name: str, overwrite: bool = False):
                     matching_value=preprocessing_config["matching_value"],
                     value_column=preprocessing_config["value_column"],
                     decimals=preprocessing_config.get("decimals", 1)
+                )
+            elif preprocessing_config["type"] == "raw_age":
+                preprocessor = RawAgePreprocessor(
+                    keep_meds_birth=preprocessing_config.get("keep_meds_birth", False),
+                    decimals=preprocessing_config.get("decimals", 0)
                 )
             else:
                 raise ValueError(f"Preprocessor {preprocessing_config['type']} not supported")
