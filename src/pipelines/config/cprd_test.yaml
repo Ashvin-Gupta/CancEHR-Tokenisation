@@ -155,7 +155,7 @@ postprocessing:
 
     - type: "demographic_sort_order"
       token_patterns:
-        - "AGE:"
+        - "AGE"
         - "GENDER//"
         - "ETHNICITY//"
         - "REGION//"
