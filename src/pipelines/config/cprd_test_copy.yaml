@@ -1,0 +1,168 @@
+# File: src/pipelines/config/cprd_test.yaml
+
+name: "cprd_custom_tokenization_pipeline"
+
+# 1. Point to your data and define where to save the output
+data:
+    path: "/data/scratch/qc25022/pancreas/final_cleaned_events_debug" 
+
+save_path: "/data/scratch/qc25022/pancreas/tokenised_data_word_level_debug" 
+
+# 2. Define the preprocessing steps in order
+preprocessing:
+    # Then, truncate all relevant codes
+    - type: "code_truncation"
+      matching_type: "contains"
+      matching_value: "//"
+
+    # Then, add the static data
+    - type: "load_static_data"
+      # matching_type: "equals"
+      # matching_value: "MEDS_BIRTH"
+      csv_filepath: "/data/scratch/qc25022/upgi/master_subject_labels.csv"
+      subject_id_column: "subject_id"
+      columns:
+      # Gender
+      - column_name: "gender"
+        code_template: "DEMOGRAPHICS//GENDER"
+        value_prefix: "GENDER//"
+        insert_code: False
+        mappings:
+          "male": "M"
+          "female": "F"
+      
+      # Ethnicity
+      - column_name: "ethnicity"
+        code_template: "DEMOGRAPHICS//ETHNICITY"
+        value_prefix: "ETHNICITY//"
+        insert_code: False
+        valid_values: ["WHITE", "BLACK", "ASIAN", "MIXED", "OTHER"]
+        mappings:
+          "WHITE": "WHITE"
+          "INDIAN": "ASIAN"
+          "BL CARIB": "BLACK"
+          "OTHER": "OTHER"
+          "OTH ASIAN": "ASIAN"
+          "BL AFRIC": "BLACK"
+          "PAKISTANI": "ASIAN"
+          "MIXED": "MIXED"
+          "ASIAN OR BRITISH_ASIAN": "ASIAN"
+          "BL OTHER": "BLACK"
+          "CHINESE": "ASIAN"
+          "BLACK OR BLACK BRITISH": "BLACK"
+          "BANGLADESHI": "ASIAN"
+          "UNKNOWN": "OTHER"
+      
+      # Region 
+      - column_name: "region"
+        code_template: "DEMOGRAPHICS//REGION"
+        value_prefix: "REGION//"
+        insert_code: False
+    
+    - type: "demographic_aggregation"
+      measurements:
+      - token_pattern: "MEDICAL//bmi"
+        value_column: "numeric_value"
+        aggregation: "median"
+        num_bins: 5
+        bin_labels: ["very low", "low", "normal", "high", "very high"]
+        token_prefix: "MEDICAL//BMI"
+        insert_code: True
+        remove_original_tokens: True
+      - token_pattern: "MEDICAL//height"
+        value_column: "numeric_value"
+        aggregation: "median"
+        num_bins: 5
+        token_prefix: "MEDICAL//HEIGHT"
+        insert_code: True
+        remove_original_tokens: True
+      - token_pattern: "MEDICAL//weight"
+        value_column: "numeric_value"
+        aggregation: "median"
+        num_bins: 5
+        token_prefix: "MEDICAL//WEIGHT"
+        insert_code: True
+        remove_original_tokens: True
+      
+    - type: "round_numeric"
+      matching_type: "starts_with"
+      matching_value: "LAB//"
+      value_column: "numeric_value"
+      decimals: 1
+    
+    - type: "round_numeric"
+      matching_type: "starts_with"
+      matching_value: "LAB//"
+      value_column: "numeric_value"
+      decimals: 1
+    
+    - type: "round_numeric"
+      matching_type: "starts_with"
+      matching_value: "MEDICAL//bmi"
+      value_column: "numeric_value"
+      decimals: 1
+    
+    - type: "round_numeric"
+      matching_type: "starts_with"
+      matching_value: "MEDICAL//bp_diastolic"
+      value_column: "numeric_value"
+      decimals: 1
+
+    - type: "round_numeric"
+      matching_type: "starts_with"
+      matching_value: "MEDICAL//bp_systolic"
+      value_column: "numeric_value"
+      decimals: 1
+
+    - type: "round_numeric"
+      matching_type: "starts_with"
+      matching_value: "MEASUREMENT//"
+      value_column: "numeric_value"
+      decimals: 1
+
+    # Insert Age
+    - type: "binned_age"
+      keep_meds_birth: False
+    
+
+# 3. Add time intervals after tokenization
+postprocessing:
+    - type: "time_interval"
+      interval_tokens:
+        "1d": {min: 1, max: 1440}
+        "1d-2d": {min: 1440, max: 2880}
+        "2d-4d": {min: 2880, max: 5760}
+        "4d-7d": {min: 5760, max: 10080}
+        "7d-12d": {min: 10080, max: 17280}
+        "12d-20d": {min: 17280, max: 28800}
+        "20d-30d": {min: 28800, max: 43200}
+        "30d-2mt": {min: 43200, max: 86400}
+        "2mt-4mt": {min: 86400, max: 172800}
+        "4mt-6mt": {min: 172800, max: 259200}
+        "6mt-8mt": {min: 259200, max: 345600}
+        "8mt-10mt": {min: 345600, max: 432000}
+        "10mt-12mt": {min: 432000, max: 518400}
+        "12mt-18mt": {min: 518400, max: 604800}
+        "18mt-24mt": {min: 604800, max: 691200}
+        "24mt-60mt": {min: 691200, max: 1555200}
+        "60mt-": {min: 1555200}
+
+    - type: "demographic_sort_order"
+      token_patterns:
+        - "AGE:"
+        - "GENDER//"
+        - "ETHNICITY//"
+        - "REGION//"
+        - "MEDICAL//BMI"
+        - "LIFESTYLE//"
+
+    # - type: "remove_numeric"
+        
+
+# 4. Define the tokenizer settings
+tokenization:
+    tokenizer: "word_level"
+    vocab_size: 20000
+    insert_event_tokens: False
+    insert_numeric_tokens: False
+    insert_text_tokens: False

@@ -42,7 +42,7 @@ class DemographicAggregationPreprocessor(BasePreprocessor):
     
     def _validate_measurements(self):
         """Validate measurement configurations"""
-        required_fields = ["token_pattern", "value_column", "aggregation", "num_bins"]
+        required_fields = ["token_pattern", "value_column", "aggregation"]
         valid_aggregations = ["mean", "min", "max", "median"]
         valid_value_columns = ["text_value", "numeric_value"]
         
@@ -60,14 +60,15 @@ class DemographicAggregationPreprocessor(BasePreprocessor):
             if measurement["value_column"] not in valid_value_columns:
                 raise ValueError(f"Measurement {i}: value_column must be one of {valid_value_columns}")
             
-            # Validate num_bins
-            if measurement["num_bins"] < 2:
-                raise ValueError(f"Measurement {i}: num_bins must be at least 2")
-            
-            bin_labels = measurement.get("bin_labels")
-            if bin_labels is not None:
-                if len(bin_labels) != measurement["num_bins"]:
-                    raise ValueError(f"Measurement {i}: bin_labels must have length {measurement['num_bins']}")
+            # Validate num_bins if it exists
+            if "num_bins" in measurement:
+                if measurement["num_bins"] < 2:
+                    raise ValueError(f"Measurement {i}: num_bins must be at least 2")
+                
+                bin_labels = measurement.get("bin_labels")
+                if bin_labels is not None:
+                    if len(bin_labels) != measurement["num_bins"]:
+                        raise ValueError(f"Measurement {i}: bin_labels must have length {measurement['num_bins']}")
                 
     
     def fit(self, event_files: List[str]) -> None:
@@ -97,6 +98,11 @@ class DemographicAggregationPreprocessor(BasePreprocessor):
         
         # Compute quantile bins for each measurement
         for measurement_idx, measurement in enumerate(self.measurements):
+            if "num_bins" not in measurement:
+                self.quantile_bins[measurement_idx] = None
+                print(f"  {measurement.get('token_prefix', 'NO_PREFIX')}Qx: using raw values (no binning)")
+                continue
+            
             values = measurement_data[measurement_idx]
             if len(values) > 0:
                 values_array = np.array(values)
@@ -211,10 +217,19 @@ class DemographicAggregationPreprocessor(BasePreprocessor):
                 aggregated_value = self._aggregate_subject_measurement(subject_events, measurement)
                 
                 if aggregated_value is not None:
-                    # Bin the aggregated value
-                    bin_label = self._bin_value(aggregated_value, measurement_idx)
+                    # Determine whether to bin or use raw rounded value
+                    text_content = None
+
+                    if "num_bins" in measurement:
+                        # Use existing binning logic
+                        text_content = self._bin_value(aggregated_value, measurement_idx)
+                    else:
+                        # Use raw value with rounding (Default to 1 decimal place)
+                        decimals = measurement.get("decimals", 1)
+                        text_content = f"{aggregated_value:.{decimals}f}"
                     
-                    if bin_label is not None:
+                    # Proceed only if we have a valid text value (bin or raw string)
+                    if text_content is not None:
                         # Create demographic event
                         token_prefix = measurement.get("token_prefix", "")
                         insert_code = measurement.get("insert_code", True)
@@ -222,11 +237,11 @@ class DemographicAggregationPreprocessor(BasePreprocessor):
                         if insert_code:
                             # Code and value as separate tokens
                             code = token_prefix.rstrip("//") if token_prefix else "DEMOGRAPHIC"
-                            text_value = bin_label
+                            text_value = text_content
                         else:
                             # Combined format with full control over prefix
                             code = "STATIC_DATA_NO_CODE"
-                            text_value = f"{token_prefix}{bin_label}"
+                            text_value = f"{token_prefix}{text_content}"
                         
                         # Create demographic event with full MEDS schema
                         demographic_event = {}
