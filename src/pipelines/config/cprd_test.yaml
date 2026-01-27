@@ -19,7 +19,7 @@ preprocessing:
     - type: "load_static_data"
       # matching_type: "equals"
       # matching_value: "MEDS_BIRTH"
-      csv_filepath: "/data/scratch/qc25022/upgi/master_subject_labels.csv"
+      csv_filepath: "/data/home/qc25022/cancer-extraction-pipeline/output/pancreas_MEDS/subject_information.csv"
       subject_id_column: "subject_id"
       columns:
       # Gender
