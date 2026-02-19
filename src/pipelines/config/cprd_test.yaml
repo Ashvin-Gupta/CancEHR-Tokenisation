@@ -6,7 +6,7 @@ name: "cprd_custom_tokenization_pipeline"
 data:
     path: "/data/scratch/qc25022/pancreas_MEDS/MEDS/data" 
 
-save_path: "/data/scratch/qc25022/pancreas/tokenised_data_pancreas_MEDS" 
+save_path: "/data/scratch/qc25022/pancreas/tokenised_data_pancreas_MEDS_new_time" 
 
 # 2. Define the preprocessing steps in order
 preprocessing:
