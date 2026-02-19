@@ -43,22 +43,19 @@ class TimeIntervalPostprocessor(Postprocessor):
         """
         # Convert to days
         total_days = time_delta.total_seconds() / 86400.0
-        
-        # One week = 7 days
+
+        if total_days < 1.0:
+            return None  # no token for sub-day gaps
+
         one_week_days = 7.0
-        
         if total_days < one_week_days:
-            # Bucket into days (round to nearest day)
-            days = round(total_days)
-            # Ensure at least 1 day if there's any time difference
-            days = max(1, days)
-            return f"{days}d"
+            days = int(round(total_days))
+            return f"{days} day" if days == 1 else f"{days} days"
         else:
-            # Bucket into weeks (round to nearest week)
-            weeks = round(total_days / one_week_days)
-            # Ensure at least 1 week
-            weeks = max(1, weeks)
-            return f"{weeks}w"
+            weeks = int(round(total_days / 7.0))
+            if weeks < 1:
+                weeks = 1
+            return f"{weeks} week" if weeks == 1 else f"{weeks} weeks"
 
     
     def _encode(self, datapoint: Dict[str, Any]) -> Dict[str, Any]:
@@ -101,39 +98,40 @@ class TimeIntervalPostprocessor(Postprocessor):
                 if self.use_dynamic_bucketing:
                     # Use dynamic bucketing
                     interval_name = self._get_dynamic_bucket_name(time_delta)
-                    interval_token = {
-                        'code': f'<time_interval_{interval_name}>',
-                        'timestamp': current_timestamp,
-                        'numeric_value': None,
-                        'text_value': None,
-                        'unit': None
-                    }
-                    new_event_list.append(interval_token)
-                else:
-                
-                    # Check if time delta matches any interval
-                    for interval_name, interval_info in self.interval_tokens.items():
-                        min_time = interval_info["min"]
-                        max_time = interval_info.get("max", None)
-                        
-                        if max_time is None:
-                            # Open-ended interval (e.g., "1h-")
-                            condition = time_delta >= min_time
-                        else:
-                            # Bounded interval (e.g., "5m-15m")
-                            condition = min_time <= time_delta <= max_time
-                        
-                        if condition:
-                            # Insert time interval token
-                            interval_token = {
-                                'code': f'<time_interval_{interval_name}>',
-                                'timestamp': current_timestamp,
-                                'numeric_value': None,
-                                'text_value': None,
-                                'unit': None
-                            }
-                            new_event_list.append(interval_token)
-                            break
+                    if interval_name is not None:
+                        interval_token = {
+                            'code': interval_name,
+                            'timestamp': current_timestamp,
+                            'numeric_value': None,
+                            'text_value': None,
+                            'unit': None
+                        }
+                        new_event_list.append(interval_token)
+                    else:
+                    
+                        # Check if time delta matches any interval
+                        for interval_name, interval_info in self.interval_tokens.items():
+                            min_time = interval_info["min"]
+                            max_time = interval_info.get("max", None)
+                            
+                            if max_time is None:
+                                # Open-ended interval (e.g., "1h-")
+                                condition = time_delta >= min_time
+                            else:
+                                # Bounded interval (e.g., "5m-15m")
+                                condition = min_time <= time_delta <= max_time
+                            
+                            if condition:
+                                # Insert time interval token
+                                interval_token = {
+                                    'code': f'<time_interval_{interval_name}>',
+                                    'timestamp': current_timestamp,
+                                    'numeric_value': None,
+                                    'text_value': None,
+                                    'unit': None
+                                }
+                                new_event_list.append(interval_token)
+                                break
             
             # Add the current event
             new_event_list.append(current_event)
