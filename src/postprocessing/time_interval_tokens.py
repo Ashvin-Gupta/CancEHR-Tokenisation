@@ -6,24 +6,60 @@ from .base import Postprocessor
 import numpy as np
 
 class TimeIntervalPostprocessor(Postprocessor):
-    def __init__(self, interval_tokens: Dict[str, Dict[str, int]]):
+    def __init__(self, interval_tokens: Dict[str, Dict[str, int]], use_dynamic_bucketing: bool = False):
         """
         Postprocessor that inserts time interval tokens between events in the event_list.
 
         Args:
             interval_tokens: Dictionary containing the interval tokens and their minimum and maximum values in minutes.
+                            Ignored if use_dynamic_bucketing is True.
+            use_dynamic_bucketing: If True, uses dynamic bucketing:
+                                   - < 1 week: buckets into days (1d, 2d, 3d, etc.)
+                                   - >= 1 week: buckets into weeks (1w, 2w, 32w, 45w, etc.)
         """
         super().__init__()
+        self.use_dynamic_bucketing = use_dynamic_bucketing
 
-        # Store interval-specific parameters, converting minutes to timedelta objects
-        self.interval_tokens = {}
-        for interval_name, interval_info in interval_tokens.items():
-            converted_info = {}
-            if "min" in interval_info:
-                converted_info["min"] = datetime.timedelta(minutes=interval_info["min"])
-            if "max" in interval_info:
-                converted_info["max"] = datetime.timedelta(minutes=interval_info["max"])
-            self.interval_tokens[interval_name] = converted_info
+        if not use_dynamic_bucketing:
+            # Store interval-specific parameters, converting minutes to timedelta objects
+            self.interval_tokens = {}
+            for interval_name, interval_info in interval_tokens.items():
+                converted_info = {}
+                if "min" in interval_info:
+                    converted_info["min"] = datetime.timedelta(minutes=interval_info["min"])
+                if "max" in interval_info:
+                    converted_info["max"] = datetime.timedelta(minutes=interval_info["max"])
+                self.interval_tokens[interval_name] = converted_info
+    
+    def _get_dynamic_bucket_name(self, time_delta: datetime.timedelta) -> str:
+        """
+        Calculate dynamic bucket name based on time delta.
+        
+        Args:
+            time_delta: Time difference between events
+            
+        Returns:
+            Bucket name string (e.g., "1d", "3d", "1w", "32w")
+        """
+        # Convert to days
+        total_days = time_delta.total_seconds() / 86400.0
+        
+        # One week = 7 days
+        one_week_days = 7.0
+        
+        if total_days < one_week_days:
+            # Bucket into days (round to nearest day)
+            days = round(total_days)
+            # Ensure at least 1 day if there's any time difference
+            days = max(1, days)
+            return f"{days}d"
+        else:
+            # Bucket into weeks (round to nearest week)
+            weeks = round(total_days / one_week_days)
+            # Ensure at least 1 week
+            weeks = max(1, weeks)
+            return f"{weeks}w"
+
     
     def _encode(self, datapoint: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -61,30 +97,43 @@ class TimeIntervalPostprocessor(Postprocessor):
             # If we found a previous timestamp, calculate time difference
             if last_timestamp is not None:
                 time_delta = current_timestamp - last_timestamp
+
+                if self.use_dynamic_bucketing:
+                    # Use dynamic bucketing
+                    interval_name = self._get_dynamic_bucket_name(time_delta)
+                    interval_token = {
+                        'code': f'<time_interval_{interval_name}>',
+                        'timestamp': current_timestamp,
+                        'numeric_value': None,
+                        'text_value': None,
+                        'unit': None
+                    }
+                    new_event_list.append(interval_token)
+                else:
                 
-                # Check if time delta matches any interval
-                for interval_name, interval_info in self.interval_tokens.items():
-                    min_time = interval_info["min"]
-                    max_time = interval_info.get("max", None)
-                    
-                    if max_time is None:
-                        # Open-ended interval (e.g., "1h-")
-                        condition = time_delta >= min_time
-                    else:
-                        # Bounded interval (e.g., "5m-15m")
-                        condition = min_time <= time_delta <= max_time
-                    
-                    if condition:
-                        # Insert time interval token
-                        interval_token = {
-                            'code': f'<time_interval_{interval_name}>',
-                            'timestamp': current_timestamp,
-                            'numeric_value': None,
-                            'text_value': None,
-                            'unit': None
-                        }
-                        new_event_list.append(interval_token)
-                        break
+                    # Check if time delta matches any interval
+                    for interval_name, interval_info in self.interval_tokens.items():
+                        min_time = interval_info["min"]
+                        max_time = interval_info.get("max", None)
+                        
+                        if max_time is None:
+                            # Open-ended interval (e.g., "1h-")
+                            condition = time_delta >= min_time
+                        else:
+                            # Bounded interval (e.g., "5m-15m")
+                            condition = min_time <= time_delta <= max_time
+                        
+                        if condition:
+                            # Insert time interval token
+                            interval_token = {
+                                'code': f'<time_interval_{interval_name}>',
+                                'timestamp': current_timestamp,
+                                'numeric_value': None,
+                                'text_value': None,
+                                'unit': None
+                            }
+                            new_event_list.append(interval_token)
+                            break
             
             # Add the current event
             new_event_list.append(current_event)

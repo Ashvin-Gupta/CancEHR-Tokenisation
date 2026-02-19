@@ -134,24 +134,25 @@ preprocessing:
 # 3. Add time intervals after tokenization
 postprocessing:
     - type: "time_interval"
-      interval_tokens:
-        "1d": {min: 1, max: 1440}
-        "1d-2d": {min: 1440, max: 2880}
-        "2d-4d": {min: 2880, max: 5760}
-        "4d-7d": {min: 5760, max: 10080}
-        "7d-12d": {min: 10080, max: 17280}
-        "12d-20d": {min: 17280, max: 28800}
-        "20d-30d": {min: 28800, max: 43200}
-        "30d-2mt": {min: 43200, max: 86400}
-        "2mt-4mt": {min: 86400, max: 172800}
-        "4mt-6mt": {min: 172800, max: 259200}
-        "6mt-8mt": {min: 259200, max: 345600}
-        "8mt-10mt": {min: 345600, max: 432000}
-        "10mt-12mt": {min: 432000, max: 518400}
-        "12mt-18mt": {min: 518400, max: 604800}
-        "18mt-24mt": {min: 604800, max: 691200}
-        "24mt-60mt": {min: 691200, max: 1555200}
-        "60mt-": {min: 1555200}
+    use_dynamic_bucketing: True
+      # interval_tokens:
+      #   "1d": {min: 1, max: 1440}
+      #   "1d-2d": {min: 1440, max: 2880}
+      #   "2d-4d": {min: 2880, max: 5760}
+      #   "4d-7d": {min: 5760, max: 10080}
+      #   "7d-12d": {min: 10080, max: 17280}
+      #   "12d-20d": {min: 17280, max: 28800}
+      #   "20d-30d": {min: 28800, max: 43200}
+      #   "30d-2mt": {min: 43200, max: 86400}
+      #   "2mt-4mt": {min: 86400, max: 172800}
+      #   "4mt-6mt": {min: 172800, max: 259200}
+      #   "6mt-8mt": {min: 259200, max: 345600}
+      #   "8mt-10mt": {min: 345600, max: 432000}
+      #   "10mt-12mt": {min: 432000, max: 518400}
+      #   "12mt-18mt": {min: 518400, max: 604800}
+      #   "18mt-24mt": {min: 604800, max: 691200}
+      #   "24mt-60mt": {min: 691200, max: 1555200}
+      #   "60mt-": {min: 1555200}
 
     - type: "demographic_sort_order"
       token_patterns:

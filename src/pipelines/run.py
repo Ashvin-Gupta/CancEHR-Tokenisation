@@ -152,7 +152,10 @@ def run_pipeline(config: dict, run_name: str, overwrite: bool = False):
     if "postprocessing" in config:
         for postprocessing_config in config["postprocessing"]:
             if postprocessing_config["type"] == "time_interval":
-                postprocessor = TimeIntervalPostprocessor(postprocessing_config["interval_tokens"])
+                postprocessor = TimeIntervalPostprocessor(
+                interval_tokens=postprocessing_config.get("interval_tokens", {}),
+                use_dynamic_bucketing=postprocessing_config.get("use_dynamic_bucketing", False)
+            )
             elif postprocessing_config["type"] == "demographic_sort_order":
                 postprocessor = DemographicSortOrderPostprocessor(postprocessing_config["token_patterns"])
             elif postprocessing_config["type"] == "remove_numeric":
