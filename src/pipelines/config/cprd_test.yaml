@@ -134,7 +134,7 @@ preprocessing:
 # 3. Add time intervals after tokenization
 postprocessing:
     - type: "time_interval"
-    use_dynamic_bucketing: True
+      use_dynamic_bucketing: True
       # interval_tokens:
       #   "1d": {min: 1, max: 1440}
       #   "1d-2d": {min: 1440, max: 2880}
