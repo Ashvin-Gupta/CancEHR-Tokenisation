@@ -11,6 +11,7 @@ class TimeIntervalPostprocessor(Postprocessor):
         interval_tokens: Dict[str, Dict[str, int]],
         use_dynamic_bucketing: bool = False,
         wrap_token: bool = True,
+        dataset: str = "CPRD",
     ):
         """
         Postprocessor that inserts time interval tokens between events in the event_list.
@@ -25,6 +26,9 @@ class TimeIntervalPostprocessor(Postprocessor):
         super().__init__()
         self.use_dynamic_bucketing = use_dynamic_bucketing
         self.wrap_token = wrap_token
+        self.dataset = (dataset or "CPRD").strip().upper()
+        if self.dataset not in {"CPRD", "MIMIC"}:
+            raise ValueError(f"Unsupported dataset mode: {dataset}. Expected 'CPRD' or 'MIMIC'.")
 
         # Always define this attribute for safety
         self.interval_tokens: Dict[str, Dict[str, datetime.timedelta]] = {}
@@ -49,21 +53,50 @@ class TimeIntervalPostprocessor(Postprocessor):
         Returns:
             Bucket name string (e.g., "1d", "3d", "1w", "32w")
         """
-        # Convert to days
-        total_days = time_delta.total_seconds() / 86400.0
+        total_seconds = time_delta.total_seconds()
+        if total_seconds <= 0:
+            return None
 
-        if total_days < 1.0:
-            return None  # no token for sub-day gaps
+        # Dataset-specific dynamic bucketing
+        if self.dataset == "MIMIC":
+            total_minutes = total_seconds / 60.0
+            if total_minutes < 5.0:
+                return None  # ignore sub-5min gaps
 
-        one_week_days = 7.0
-        if total_days < one_week_days:
-            days = int(round(total_days))
-            return f"{days} day" if days == 1 else f"{days} days"
-        else:
-            weeks = int(round(total_days / 7.0))
-            if weeks < 1:
-                weeks = 1
+            if total_minutes < 60.0:
+                minutes = int(total_minutes)  # floor
+                minutes = max(5, min(59, minutes))
+                return f"{minutes} minute" if minutes == 1 else f"{minutes} minutes"
+
+            total_hours = total_seconds / 3600.0
+            if total_hours < 24.0:
+                hours = int(total_hours)  # floor
+                hours = max(1, min(23, hours))
+                return f"{hours} hour" if hours == 1 else f"{hours} hours"
+
+            total_days = total_seconds / 86400.0
+            if total_days < 7.0:
+                days = int(total_days)  # floor
+                days = max(1, min(6, days))
+                return f"{days} day" if days == 1 else f"{days} days"
+
+            weeks = int(total_days / 7.0)  # floor
+            weeks = max(1, weeks)
             return f"{weeks} week" if weeks == 1 else f"{weeks} weeks"
+
+        # Default CPRD behavior (keep as-is): no token for sub-day gaps, then days (<7), else weeks
+        total_days = total_seconds / 86400.0
+        if total_days < 1.0:
+            return None
+
+        if total_days < 7.0:
+            days = int(round(total_days))
+            days = max(1, min(6, days))
+            return f"{days} day" if days == 1 else f"{days} days"
+
+        weeks = int(round(total_days / 7.0))
+        weeks = max(1, weeks)
+        return f"{weeks} week" if weeks == 1 else f"{weeks} weeks"
 
     
     def _encode(self, datapoint: Dict[str, Any]) -> Dict[str, Any]:

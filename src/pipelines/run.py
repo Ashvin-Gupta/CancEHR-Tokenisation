@@ -156,6 +156,7 @@ def run_pipeline(config: dict, run_name: str, overwrite: bool = False):
                 interval_tokens=postprocessing_config.get("interval_tokens", {}),
                 use_dynamic_bucketing=postprocessing_config.get("use_dynamic_bucketing", False)
                 ,wrap_token=postprocessing_config.get("wrap_token", True)
+                ,dataset=postprocessing_config.get("dataset", "CPRD")
             )
             elif postprocessing_config["type"] == "demographic_sort_order":
                 postprocessor = DemographicSortOrderPostprocessor(postprocessing_config["token_patterns"])
