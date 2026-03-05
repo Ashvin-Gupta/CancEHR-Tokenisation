@@ -34,3 +34,5 @@ soupsieve==2.7
 tqdm==4.67.1
 typing_extensions==4.14.0
 urllib3==2.4.0
+tokenizers==0.21.0
+transformers==4.48.0

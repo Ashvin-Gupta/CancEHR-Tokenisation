@@ -1,0 +1,29 @@
+translation:
+  enabled: false
+  # Translation already done; leaving paths here just for documentation.
+  lookup_dir: "/home/ashvingupta/Documents/MIMIC-IV/hosp/hosp"
+  meds_root: "/home/ashvingupta/Documents/MIMIC-IV/mimic_meds_ed/groups/a-faisal/edisonliu/MIMIC-IV-preprocessed/EHR_3.1_ED_2.2/mimic-meds-ed/data"
+  output_root: "/home/ashvingupta/Documents/MIMIC-IV/mimic_meds_ed/groups/a-faisal/edisonliu/MIMIC-IV-preprocessed/EHR_3.1_ED_2.2/translated"
+  splits: ["train", "test"]
+  overwrite: false
+
+bpe_training:
+  enabled: true
+  data_root: "/home/ashvingupta/Documents/MIMIC-IV/mimic_meds_ed/groups/a-faisal/edisonliu/MIMIC-IV-preprocessed/EHR_3.1_ED_2.2/translated"     # must contain train/ and test/
+  column: "text_sequence_with_time"
+  vocab_sizes: [4000]   # change this list to run other vocab sizes
+  output_dir: "/home/ashvingupta/Documents/PhD/Projects/ehr-tokenisation/artifacts/tokenizers/experiments"
+  min_frequency: 2
+  batch_size: 256
+
+encoding:
+  enabled: true
+  data_root: "/home/ashvingupta/Documents/MIMIC-IV/mimic_meds_ed/groups/a-faisal/edisonliu/MIMIC-IV-preprocessed/EHR_3.1_ED_2.2/translated"
+  column: "text_sequence_with_time"
+  # Always point encoding at the tokenizer directory for the vocab size you pick above.
+  # Example for 5000:
+  tokenizer_dir: "/home/ashvingupta/Documents/PhD/Projects/ehr-tokenisation/artifacts/tokenizers/experiments/vocab_4000"
+  # Encoded PKLs will be written into this directory (one .pkl per split/file).
+  output_root: "/home/ashvingupta/Documents/PhD/Projects/ehr-tokenisation/artifacts/tokenizers/experiments/vocab_4000"
+  batch_size: 256
+

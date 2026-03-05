@@ -1,0 +1,38 @@
+translation:
+  enabled: true
+  lookup_dir: "/home/ashvingupta/Documents/MIMIC-IV/hosp/hosp"          # contains d_labitems.csv.gz, d_icd_diagnoses.csv.gz, d_icd_procedures.csv.gz
+  meds_root: "/home/ashvingupta/Documents/MIMIC-IV/mimic_meds_ed/groups/a-faisal/edisonliu/MIMIC-IV-preprocessed/EHR_3.1_ED_2.2/mimic-meds-ed/data"        # expects train/ and test/ subdirs with .parquet files
+  output_root: "/home/ashvingupta/Documents/PhD/Projects/ehr-tokenisation/artifacts/translated_debug"     # will write train/*.parquet and test/*.parquet here
+  splits: ["train", "test"]
+  overwrite: true
+
+  # Debug speed knobs
+  max_files: 1                                  # translate only the first parquet per split
+
+bpe_training:
+  enabled: true
+  data_root: "/home/ashvingupta/Documents/PhD/Projects/ehr-tokenisation/artifacts/translated_debug"       # must contain train/ and test/
+  column: "text_sequence_with_time"
+  vocab_sizes: [5000]
+  output_dir: "/home/ashvingupta/Documents/PhD/Projects/ehr-tokenisation/artifacts/tokenizers/experiments"
+  min_frequency: 2
+  batch_size: 256
+
+  # Debug speed knobs (cap files + number of patient sequences used)
+  max_train_files: 1
+  max_test_files: 1
+  max_train_rows: 200                           # train on first 200 sequences total
+  max_test_rows: 200                            # evaluate on first 200 sequences total
+
+encoding:
+  enabled: true
+  data_root: "/home/ashvingupta/Documents/PhD/Projects/ehr-tokenisation/artifacts/translated_debug"
+  column: "text_sequence_with_time"
+  tokenizer_dir: "/home/ashvingupta/Documents/PhD/Projects/ehr-tokenisation/artifacts/tokenizers/experiments/vocab_5000"
+  output_root: "/home/ashvingupta/Documents/PhD/Projects/ehr-tokenisation/artifacts/encoded_debug_pickles"
+  batch_size: 256
+
+  # Debug speed knobs
+  splits: ["test"]                              # often enough for an end-to-end smoke test
+  max_files: 1                                  # encode only the first parquet (after split filter)
+  max_rows: 50                                  # encode only first 50 sequences total
