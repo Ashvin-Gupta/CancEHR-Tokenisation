@@ -5,6 +5,7 @@ __pycache__/
 
 # HPC Outputs
 HPC_Files/
+artifacts/
 
 # C extensions
 *.so

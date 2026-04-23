@@ -140,7 +140,11 @@ class TimeIntervalPostprocessor(Postprocessor):
                     # Use dynamic bucketing
                     interval_name = self._get_dynamic_bucket_name(time_delta)
                     if interval_name is not None:
+<<<<<<< HEAD
                         code = f"<time_interval_{interval_name}>" if self.wrap_token else interval_name
+=======
+                        code = f"<time_interval_{interval_name}>" if self.wrap_token else f"TIME {interval_name}"
+>>>>>>> f88d1cc78a428e40bb8985c34d0bb542ec130d14
                         interval_token = {
                             'code': code,
                             'timestamp': current_timestamp,
