@@ -12,6 +12,8 @@ from src.preprocessing.base import BasePreprocessor
 from src.postprocessing.base import Postprocessor
 from src.preprocessing import QuantileBinPreprocessor, CodeEnrichmentPreprocessor, LoadStaticDataPreprocessor, EthosQuantileAgePreprocessor, DemographicAggregationPreprocessor, BinnedAgePreprocessor, QuantileBin3LevelPreprocessor, RoundNumericPreprocessor
 from src.preprocessing.code_truncation import CodeTruncationPreprocessor
+from src.preprocessing.filter import FilterPreprocessor
+from src.preprocessing.top_k_filter import TopKCodePreprocessor
 from src.postprocessing import TimeIntervalPostprocessor, DemographicSortOrderPostprocessor, RemoveNumericPostprocessor
 from src.preprocessing.utils import fit_preprocessors_jointly
 from src.preprocessing.decimal_age import DecimalAgePreprocessor
@@ -77,6 +79,12 @@ def run_pipeline(config: dict, run_name: str, overwrite: bool = False):
                     k=preprocessing_config["k"],
                     value_column=preprocessing_config["value_column"]
                 )
+            elif preprocessing_config["type"] == "filter":
+                preprocessor = FilterPreprocessor(
+                    matching_type=preprocessing_config["matching_type"],
+                    matching_value=preprocessing_config["matching_value"],
+                    invert=preprocessing_config.get("invert", False)
+                )
             elif preprocessing_config["type"] == "code_enrichment":
                 preprocessor = CodeEnrichmentPreprocessor(
                     matching_type=preprocessing_config["matching_type"],
@@ -138,6 +146,12 @@ def run_pipeline(config: dict, run_name: str, overwrite: bool = False):
                     keep_meds_birth=preprocessing_config.get("keep_meds_birth", False),
                     decimals=preprocessing_config.get("decimals", 0)
                 )
+            elif preprocessing_config["type"] == "top_k_filter":
+                preprocessor = TopKCodePreprocessor(
+                    matching_type=preprocessing_config["matching_type"],
+                    matching_value=preprocessing_config["matching_value"],
+                    k=preprocessing_config.get("k", 100)
+                )
             else:
                 raise ValueError(f"Preprocessor {preprocessing_config['type']} not supported")
             
@@ -152,7 +166,12 @@ def run_pipeline(config: dict, run_name: str, overwrite: bool = False):
     if "postprocessing" in config:
         for postprocessing_config in config["postprocessing"]:
             if postprocessing_config["type"] == "time_interval":
-                postprocessor = TimeIntervalPostprocessor(postprocessing_config["interval_tokens"])
+                postprocessor = TimeIntervalPostprocessor(
+                interval_tokens=postprocessing_config.get("interval_tokens", {}),
+                use_dynamic_bucketing=postprocessing_config.get("use_dynamic_bucketing", False)
+                ,wrap_token=postprocessing_config.get("wrap_token", True)
+                ,dataset=postprocessing_config.get("dataset", "MIMIC")
+            )
             elif postprocessing_config["type"] == "demographic_sort_order":
                 postprocessor = DemographicSortOrderPostprocessor(postprocessing_config["token_patterns"])
             elif postprocessing_config["type"] == "remove_numeric":

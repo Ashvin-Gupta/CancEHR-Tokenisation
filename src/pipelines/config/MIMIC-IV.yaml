@@ -1,0 +1,199 @@
+# File: src/pipelines/config/cprd_test.yaml
+
+name: "MIMIC-IV"
+
+# 1. Point to your data and define where to save the output
+data:
+    path: "/rds/general/user/ag619/home/ashvin/MIMIC-IV/MEDS-Output/MEDS_refined/final_refined/occlude_outliers" 
+
+save_path: "/rds/general/user/ag619/home/ashvin/MEDS/tokenised_data" 
+
+# 2. Define the preprocessing steps in order
+preprocessing:
+# 1. REMOVE NOISE FIRST
+    - type: "filter"
+      matching_type: "starts_with"
+      matching_value: "AGE"           # Remove all existing Age tokens
+    - type: "filter"
+      matching_type: "starts_with"
+      matching_value: "TIME_OF_DAY"   # Remove all Time tokens
+    - type: "filter"
+      matching_type: "contains"
+      matching_value: "//22"
+    # - type: "filter"
+    #   matching_type: "starts_with"
+    #   matching_value: "BMI"        # Drop timeline BMI (to be replaced by static)
+    - type: "filter"
+      matching_type: "contains"
+      matching_value: "Height"     # Drop timeline Height
+    - type: "filter"
+      matching_type: "contains"
+      matching_value: "Weight"     # Drop timeline Weight
+        
+
+    - type: "filter"
+      matching_type: "regex" # Ensure your FilterPreprocessor supports regex if used
+      matching_value: "^(LAB//|MEDICATION//|PROCEDURE//|DIAGNOSIS//|HOSPITAL|ICU|DRG|SERVICES|SOFA|GENDER|AGE|BMI|RACE|MARITAL_STATUS|Blood Pressure|MEDS_BIRTH|BMI (kg/m2)|BMI//|MEDS_DEATH)"
+      invert: "true"         # Keep ONLY these
+
+    - type: "demographic_aggregation"
+      measurements:
+        - token_pattern: "BMI (kg/m2)"
+          value_column: "text_value"
+          aggregation: "median"
+          decimals: 1
+          token_prefix: "BMI//"
+          insert_code: true
+          remove_original_tokens: true
+    
+      # 3. TOP 100 LAB FILTERING
+    - type: "top_k_filter"
+      matching_type: "starts_with"
+      matching_value: "LAB//"
+      k: 200
+
+    
+
+    # 2. ADD THE CLEAN AGE
+    # Use raw_age with decimals: 0 to get the rounded integer at the start
+    - type: "raw_age"
+      keep_meds_birth: false
+      decimals: 0
+    - type: "load_static_data"
+      csv_filepath: "/rds/general/user/ag619/home/ashvin/MIMIC-IV/mimic-iv-3.1/hosp/admissions.csv.gz"
+      subject_id_column: "subject_id"
+      columns:
+        - column_name: "race"
+          code_template: "DEMOGRAPHICS//RACE"
+          valid_values: ["WHITE", "BLACK", "HISPANIC", "ASIAN", "OTHER"]
+          mappings:
+            "PORTUGUESE": "WHITE"
+            "MULTIPLE RACE/ETHNICITY": "OTHER"
+            "AMERICAN INDIAN/ALASKA NATIVE": "OTHER"
+            "NATIVE HAWAIIAN OR OTHER PACIFIC ISLANDER": "OTHER"
+            "SOUTH AMERICAN": "HISPANIC"
+          map_invalids_to: "RACE_UNKNOWN"
+          value_prefix: "RACE//"
+          insert_code: false
+        - column_name: "marital_status"
+          code_template: "DEMOGRAPHICS//MARITAL_STATUS"
+          valid_values: ["SINGLE", "WIDOWED", "MARRIED", "DIVORCED"]
+          map_invalids_to: "MARITAL_STATUS_UNKNOWN"
+          value_prefix: "MARITAL_STATUS//"
+          insert_code: false
+    # - type: "load_static_data"
+    #   csv_filepath: "/rds/general/user/ag619/home/ashvin/MIMIC-IV/mimic-iv-3.1/hosp/omr.csv.gz"
+    #   subject_id_column: "subject_id"
+    #   columns:
+    #   - column_name: "result_value"
+    #     code_template: "BMI"
+    #     value_prefix: "BMI//"
+        # insert_code: false # Result: BMI// <value>
+    # - type: "load_static_data"
+    #   csv_filepath: "/rds/general/user/ag619/home/ashvin/MIMIC-IV/mimic-iv-3.1/hosp/patients.csv.gz"
+    #   subject_id_column: "subject_id"
+    #   columns:
+    #   - column_name: "gender"
+    #     code_template: "GENDER"
+    #     value_prefix: "GENDER//"
+    #     insert_code: false
+    # - type: "filter"
+    #   matching_type: "starts_with"
+    #   matching_value: "TIME_OF_DAY"
+      
+    
+    - type: "round_numeric"
+      matching_type: "starts_with"
+      matching_value: "LAB//"
+      value_column: "numeric_value"
+      decimals: 1
+    - type: "raw_age"
+      keep_meds_birth: False
+      decimals: 0
+    
+
+# 3. Add time intervals after tokenization
+postprocessing:
+    - type: "time_interval"
+      use_dynamic_bucketing: True
+      wrap_token: False
+      dataset: "MIMIC"
+      # interval_tokens:
+      #   "5m-15m":
+      #     min: 5
+      #     max: 15
+      #   "15m-45m":
+      #     min: 15
+      #     max: 45
+      #   "45m-1h15m":
+      #     min: 45
+      #     max: 75
+      #   "1h15m-2h":
+      #     min: 75
+      #     max: 120
+      #   "2h-3h":
+      #     min: 120
+      #     max: 180
+      #   "3h-5h":
+      #     min: 180
+      #     max: 300
+      #   "5h-8h":
+      #     min: 300
+      #     max: 480
+      #   "8h-12h":
+      #     min: 480
+      #     max: 720
+      #   "12h-18h":
+      #     min: 720
+      #     max: 1080
+      #   "18h-1d":
+      #     min: 1080
+      #     max: 1440
+      #   "1d-2d":
+      #     min: 1440
+      #     max: 2880
+      #   "2d-4d":
+      #     min: 2880
+      #     max: 5760
+      #   "4d-7d":
+      #     min: 5760
+      #     max: 10080
+      #   "7d-12d":
+      #     min: 10080
+      #     max: 17280
+      #   "12d-20d":
+      #     min: 17280
+      #     max: 28800
+      #   "20d-30d":
+      #     min: 28800
+      #     max: 43200
+      #   "30d-2mt":
+      #     min: 43200
+      #     max: 86400
+      #   "2mt-6mt":
+      #     min: 86400
+      #     max: 259200
+      #   "6mt-":
+      #     min: 259200
+
+    - type: "demographic_sort_order"
+      token_patterns:
+        - "AGE"           # Age tokens fourth (matches both AGE_T1 and AGE_T2)
+        - "BMI"           # BMI tokens appear first
+        - "GENDER//"        # Gender tokens second
+        - "RACE//"          # Race tokens last
+        - "MARITAL_STATUS//" # Marital tokens third  
+        
+        
+        
+
+    # - type: "remove_numeric"
+        
+
+# 4. Define the tokenizer settings
+tokenization:
+    tokenizer: "word_level"
+    vocab_size: 50000
+    insert_event_tokens: False
+    insert_numeric_tokens: False
+    insert_text_tokens: False

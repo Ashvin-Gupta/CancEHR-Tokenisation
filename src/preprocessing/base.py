@@ -18,7 +18,7 @@ class BasePreprocessor(ABC):
         self.matching_value = matching_value
         
         # validate matching type
-        if matching_type not in ["starts_with", "ends_with", "contains", "equals"]:
+        if matching_type not in ["starts_with", "ends_with", "contains", "equals", "regex"]:
             raise ValueError(f"Invalid matching type: {matching_type}")
         
     def _match(self, code: str) -> bool:
@@ -43,6 +43,9 @@ class BasePreprocessor(ABC):
             return self.matching_value in code
         elif self.matching_type == "equals":
             return code == self.matching_value
+        elif self.matching_type == "regex":
+            import re
+            return bool(re.search(self.matching_value, code))
         return False
     
     @abstractmethod
